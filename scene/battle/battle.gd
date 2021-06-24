@@ -1,5 +1,7 @@
 extends Node
 
+signal attack_target(target)
+
 const WARRIOR = preload("res://scene/warrior/warrior.tscn")
 const MOBS = [
 	{
@@ -19,6 +21,7 @@ const MOBS = [
 ]
 
 onready var _rng = RandomNumberGenerator.new()
+onready var _terrain = $terrain
 onready var _waypoint = $waypoint
 onready var _player_holder = $player_holder
 onready var _mob_holder = $mob_holder
@@ -30,12 +33,17 @@ onready var _camera = $Camera2D
 func _ready():
 	Engine.set_target_fps(60)
 	
+	
+	
 func _on_control_host():
 	_control.show_button(false)
 	_network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, { name = "host player" })
 		
 	for mob in MOBS:
 		 spawn_mob(mob.network_master_id, mob.name, mob.data, true)
+		
+	_terrain.create_simplex()
+	_terrain.generate_battlefield()
 	
 func _on_control_join():
 	_control.show_button(false)
@@ -43,6 +51,9 @@ func _on_control_join():
 	
 	for mob in MOBS:
 		 spawn_mob(mob.network_master_id, mob.name, mob.data, false)
+	
+	
+	
 	
 func _on_network_self_connected(player_network_unique_id):
 	var warrior = WARRIOR.instance()
@@ -55,9 +66,28 @@ func _on_network_self_connected(player_network_unique_id):
 	
 	_camera.set_anchor(warrior)
 	_control.connect("touch_position", warrior, "move_to")
+	connect("attack_target", warrior, "attack_target")
+	
+	if get_tree().is_network_server():
+		return
+		
+	rpc_id(_network.PLAYER_HOST_ID,"_request_terrain_data",player_network_unique_id)
 	
 func _on_control_touch_position(pos):
 	_waypoint.show_waypoint(Color.white, pos)
+	
+func _on_control_disconnect():
+	for child in _player_holder.get_children():
+		child.set_process(false)
+
+	for child in _mob_holder.get_children():
+		child.set_process(false)
+		
+	_network.disconnect_from_server()
+	_on_network_server_disconnected()
+	
+	
+	
 	
 func spawn_mob(network_master_id, _name, data, is_master):
 	var warrior = WARRIOR.instance()
@@ -75,6 +105,9 @@ func spawn_mob(network_master_id, _name, data, is_master):
 func _on_mob_ready(mob):
 	mob.move_to(Vector2(_rng.randf_range(-400,400),_rng.randf_range(-400,400)))
 	
+	
+	
+	
 func _on_network_player_connected(player_network_unique_id, data):
 	var warrior = WARRIOR.instance()
 	warrior.name = str(player_network_unique_id)
@@ -84,10 +117,38 @@ func _on_network_player_connected(player_network_unique_id, data):
 	warrior.connect("on_click", self,"_on_warrior_click")
 	_player_holder.add_child(warrior)
 		
-		
 func _on_warrior_click(warrior):
 	_waypoint.show_waypoint(Color.red, warrior.position)
+	emit_signal("attack_target", warrior)
+	
+	
+	
+remote func _request_terrain_data(from_id):
+	if not get_tree().is_network_server():
+		return
 		
+	var _terrain_data = {
+		biom = _terrain.biom,
+		simplex_seed = _terrain.simplex_seed,
+		size = _terrain.tile_size,
+	}
+		
+	rpc_id(from_id,"_send_terrain_data", _terrain_data)
+		
+remote func _send_terrain_data(_terrain_data):
+	if get_tree().is_network_server():
+		return
+		
+	if _terrain_data.empty():
+		return
+		
+	_terrain.biom = _terrain_data.biom
+	_terrain.simplex_seed = _terrain_data.simplex_seed
+	_terrain.tile_size = _terrain_data.size
+	_terrain.generate_battlefield()
+	
+	
+	
 func _on_network_player_disconnected(_player_network_unique_id):
 	for child in _player_holder.get_children():
 		if child.get_network_master() == _player_network_unique_id:
@@ -98,32 +159,23 @@ func _on_network_player_disconnected(_player_network_unique_id):
 		if child.get_network_master() == _player_network_unique_id:
 			child.set_process(false)
 			child.queue_free()
-			
-			
+	
+	
 func _on_network_server_disconnected():
 	for child in _player_holder.get_children():
 			child.set_process(false)
 			child.queue_free()
-			
+		
 	for child in _mob_holder.get_children():
 			child.set_process(false)
 			child.queue_free()
-			
+		
 	_control.show_button(true)
-		
-		
+	
+	
 func _on_network_error(err):
 	print(err)
 	
-func _on_control_disconnect():
-	for child in _player_holder.get_children():
-		child.set_process(false)
-
-	for child in _mob_holder.get_children():
-		child.set_process(false)
-		
-	_network.disconnect_from_server()
-	_on_network_server_disconnected()
 
 
 

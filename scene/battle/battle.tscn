@@ -1,13 +1,16 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://addons/network/network.gd" type="Script" id=1]
 [ext_resource path="res://scene/battle/battle.gd" type="Script" id=2]
 [ext_resource path="res://scene/control/control.tscn" type="PackedScene" id=3]
 [ext_resource path="res://addons/mobile-camera/mobile_camera.gd" type="Script" id=4]
 [ext_resource path="res://assets/ui/waypoint/waypoint.tscn" type="PackedScene" id=5]
+[ext_resource path="res://assets/terrain/terrain.tscn" type="PackedScene" id=6]
 
 [node name="battle" type="Node"]
 script = ExtResource( 2 )
+
+[node name="terrain" parent="." instance=ExtResource( 6 )]
 
 [node name="waypoint" parent="." instance=ExtResource( 5 )]
 

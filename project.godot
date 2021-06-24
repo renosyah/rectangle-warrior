@@ -10,6 +10,11 @@ config_version=4
 
 _global_script_classes=[ {
 "base": "Node",
+"class": "Biom",
+"language": "GDScript",
+"path": "res://assets/data/biom.gd"
+}, {
+"base": "Node",
 "class": "GDUUID",
 "language": "GDScript",
 "path": "res://addons/godot-uuid/uuid.gd"
@@ -65,6 +70,7 @@ _global_script_classes=[ {
 "path": "res://addons/LANServerBroadcast/server_listener/ServerListener.gd"
 } ]
 _global_script_class_icons={
+"Biom": "",
 "GDUUID": "",
 "InputEventMultiScreenDrag": "",
 "InputEventScreenPinch": "",

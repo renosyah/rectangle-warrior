@@ -8,10 +8,11 @@
 [ext_resource path="res://scene/warrior/joint.png" type="Texture" id=6]
 [ext_resource path="res://addons/Godot-Touch-Input-Manager/InputManager.gd" type="Script" id=7]
 
-[sub_resource type="RectangleShape2D" id=1]
-extents = Vector2( 32.0768, 54.7949 )
+[sub_resource type="CapsuleShape2D" id=1]
+radius = 18.2165
+height = 43.9146
 
-[sub_resource type="Animation" id=4]
+[sub_resource type="Animation" id=2]
 resource_name = "nothing"
 tracks/0/type = "value"
 tracks/0/path = NodePath("arm_left_joint:position")
@@ -158,10 +159,9 @@ tracks/11/keys = {
 "values": [ Vector2( 24.5655, 22.5472 ) ]
 }
 
-[sub_resource type="Animation" id=5]
+[sub_resource type="Animation" id=3]
 resource_name = "punch"
 length = 0.8
-loop = true
 tracks/0/type = "value"
 tracks/0/path = NodePath("arm_left_joint:position")
 tracks/0/interp = 1
@@ -211,8 +211,7 @@ tracks/3/keys = {
 "values": [ 47.5993, 69.3279, -70.857, -70.857 ]
 }
 
-[sub_resource type="Animation" id=2]
-resource_name = "idle"
+[sub_resource type="Animation" id=4]
 loop = true
 tracks/0/type = "value"
 tracks/0/path = NodePath("body/leg_left:position")
@@ -275,8 +274,7 @@ tracks/4/keys = {
 "values": [ Vector2( 0, 0 ), Vector2( 0, -2 ) ]
 }
 
-[sub_resource type="Animation" id=3]
-resource_name = "walking"
+[sub_resource type="Animation" id=5]
 length = 0.9
 loop = true
 tracks/0/type = "value"
@@ -345,10 +343,8 @@ script = ExtResource( 3 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource( 1 )
-disabled = true
 
 [node name="body" type="Node2D" parent="."]
-position = Vector2( 0, -0.550424 )
 
 [node name="arm_left_joint" type="Sprite" parent="body"]
 position = Vector2( 5.43137, -3.1839 )
@@ -377,7 +373,7 @@ texture = ExtResource( 6 )
 
 [node name="arm" type="Sprite" parent="body/arm_right_joint"]
 position = Vector2( 24.5655, 22.5472 )
-rotation = 0.446493
+rotation = 0.446492
 texture = ExtResource( 5 )
 
 [node name="leg_left" type="Sprite" parent="body"]
@@ -390,8 +386,8 @@ texture = ExtResource( 4 )
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="body"]
 autoplay = "nothing"
-anims/nothing = SubResource( 4 )
-anims/punch = SubResource( 5 )
+anims/nothing = SubResource( 2 )
+anims/punch = SubResource( 3 )
 
 [node name="Node2D" type="Node2D" parent="."]
 z_index = 1
@@ -418,18 +414,18 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-margin_left = -37.0
-margin_top = -81.0
-margin_right = 41.0
-margin_bottom = 91.0
+margin_left = -20.0
+margin_top = -49.0
+margin_right = 23.0
+margin_bottom = 41.0
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 autoplay = "idle"
-anims/idle = SubResource( 2 )
-anims/walking = SubResource( 3 )
+anims/idle = SubResource( 4 )
+anims/walking = SubResource( 5 )
 
 [node name="Timer" type="Timer" parent="."]
 one_shot = true
@@ -438,6 +434,9 @@ one_shot = true
 
 [node name="touch_input" type="Node" parent="."]
 script = ExtResource( 7 )
+
+[node name="attack_delay" type="Timer" parent="."]
+one_shot = true
 
 [connection signal="gui_input" from="Node2D/Control" to="." method="_on_Control_gui_input"]
 [connection signal="timeout" from="Timer" to="." method="_on_Timer_timeout"]
