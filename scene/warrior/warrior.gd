@@ -1,19 +1,21 @@
 extends KinematicBody2D
 
 enum { IDLE,WALKING }
-const MOVE_SPEED = 800.0
+const MOVE_SPEED = 120.0
 
+signal on_click(warrior)
 signal on_ready(warrior)
 
 onready var _rng = RandomNumberGenerator.new()
 onready var _label = $Node2D/Label
-onready var _sprite = $Sprite
+onready var _body = $body
 onready var _animation = $AnimationPlayer
 onready var _idle_timer = $Timer
 onready var _remote_transform = $RemoteTransform2D
+onready var _touch_input = $touch_input
 
-var camera = null #nodePath
-var rally_point = null #vector2
+var camera = null # nodePath
+var rally_point = null # vector2
 
 puppet var _position = position
 puppet var _state = IDLE
@@ -34,6 +36,7 @@ func _ready():
 	
 	_label.text = data.name
 	_label.self_modulate = label_color
+	
 	emit_signal("on_ready", self)
 	
 func move_to(_pos: Vector2):
@@ -43,9 +46,9 @@ func move_to(_pos: Vector2):
 
 remotesync func _facing_direction(_dir):
 	if _dir.x > 0:
-		_sprite.scale.x = 1
+		_body.scale.x = 1
 	else:
-		_sprite.scale.x = -1
+		_body.scale.x = -1
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
@@ -84,19 +87,37 @@ func _master_move(_delta):
 		set_process(false)
 		
 	move_and_slide(velocity)
-		
+	
 	rset("_position", position)
 	rset_unreliable("_state", state)
 	
 func _puppet_move():
 	position = _position
-	
 	match _state:
 		IDLE:
 			_animation.play("idle")
 		WALKING:
 			_animation.play("walking")
 		
+		
 func _on_Timer_timeout():
 	emit_signal("on_ready", self)
+	
+	
+func _on_Control_gui_input(event):
+	if event is InputEventMouseButton and event.is_action_pressed("left_click"):
+		on_warrior_click()
+		
+	_touch_input.check_input(event)
+
+func _on_touch_input_any_gesture(_sig, val):
+	if val is InputEventSingleScreenTap:
+		on_warrior_click()
+	
+func on_warrior_click():
+	emit_signal("on_click", self)
+	
+	
+	
+	
 	

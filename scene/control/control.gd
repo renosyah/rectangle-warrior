@@ -20,7 +20,7 @@ func _on_touch_input_any_gesture(_sig, val):
 	if val is InputEventSingleScreenTap:
 		emit_signal("touch_position", get_global_mouse_position())
 
-func _on_Control_gui_input(event):
+func _unhandled_input(event):
 	if event is InputEventMouseButton and event.is_action_pressed("left_click"):
 		emit_signal("touch_position", get_global_mouse_position())
 		
