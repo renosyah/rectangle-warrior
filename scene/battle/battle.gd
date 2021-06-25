@@ -41,7 +41,7 @@ func _ready():
 	Engine.set_target_fps(60)
 	
 	var s = SaveLoad.new()
-	battle_setting = s.load_save("battle_setting.data")
+	battle_setting = s.load_save(SaveFileName.BATTLE_SETTING_FILENAME)
 	if not battle_setting:
 		return
 	

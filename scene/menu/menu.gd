@@ -11,13 +11,13 @@ var battle_setting = {
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	var s = SaveLoad.new()
-	s.delete_save("battle_setting.data")
+	s.delete_save(SaveFileName.BATTLE_SETTING_FILENAME)
 
 func _on_host_button_pressed():
 	battle_setting.mode = "HOST"
 	
 	var s = SaveLoad.new()
-	s.save("battle_setting.data", battle_setting)
+	s.save(SaveFileName.BATTLE_SETTING_FILENAME, battle_setting)
 	
 	get_tree().change_scene("res://scene/battle/battle.tscn")
 
@@ -36,7 +36,7 @@ func _on_find_server_on_join(info):
 	battle_setting.port = info["port"]
 	
 	var s = SaveLoad.new()
-	s.save("battle_setting.data", battle_setting)
+	s.save(SaveFileName.BATTLE_SETTING_FILENAME, battle_setting)
 	
 	get_tree().change_scene("res://scene/battle/battle.tscn")
 	
