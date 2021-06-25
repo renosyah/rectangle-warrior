@@ -5,7 +5,8 @@ onready var _find_server = $CanvasLayer/find_server
 var battle_setting = {
 	mode = "HOST",
 	ip = "",
-	port = 0
+	port = 0,
+	mobs = []
 }
 
 # Called when the node enters the scene tree for the first time.
@@ -34,6 +35,7 @@ func _on_find_server_on_join(info):
 	battle_setting.mode = "JOIN"
 	battle_setting.ip = info["ip"]
 	battle_setting.port = info["port"]
+	battle_setting.mobs = info["mobs"]
 	
 	var s = SaveLoad.new()
 	s.save(SaveFileName.BATTLE_SETTING_FILENAME, battle_setting)

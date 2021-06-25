@@ -55,6 +55,11 @@ _global_script_classes=[ {
 "path": "res://addons/mobile-camera/mobile_camera.gd"
 }, {
 "base": "Node",
+"class": "RandomNameGenerator",
+"language": "GDScript",
+"path": "res://addons/random-name/random_names.gd"
+}, {
+"base": "Node",
 "class": "SaveFileName",
 "language": "GDScript",
 "path": "res://assets/data/save_file_name.gd"
@@ -84,6 +89,7 @@ _global_script_class_icons={
 "InputEventSingleScreenTap": "",
 "InputEventSingleScreenTouch": "",
 "MobileCamera": "",
+"RandomNameGenerator": "",
 "SaveFileName": "",
 "SaveLoad": "",
 "ServerAdvertiser": "res://addons/LANServerBroadcast/server_advertiser/server_advertiser.png",

@@ -3,22 +3,6 @@ extends Node
 signal attack_target(target)
 
 const WARRIOR = preload("res://scene/warrior/warrior.tscn")
-const MOBS = [
-	{
-		network_master_id = 1,
-		name = "mob-1",
-		data = {
-			name = "bob"
-		}
-	},
-	{
-		network_master_id = 1,
-		name = "mob-2",
-		data = {
-			name = "susan"
-		}
-	}
-]
 
 onready var _rng = RandomNumberGenerator.new()
 onready var _terrain = $terrain
@@ -33,7 +17,8 @@ onready var _camera = $Camera2D
 var battle_setting = {
 	mode = "HOST",
 	ip = "",
-	port = 0
+	port = 0,
+	mobs = []
 }
 
 # Called when the node enters the scene tree for the first time.
@@ -48,25 +33,35 @@ func _ready():
 	if battle_setting.mode == "HOST":
 		host()
 	elif battle_setting.mode == "JOIN":
-		join(battle_setting.ip, battle_setting.port)
+		join()
 	
 	
 func host():
 	_network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, { name = "host player" })
+	
+	var mobs_count = _rng.randf_range(1,5)
+	for i in mobs_count:
+		battle_setting.mobs.append({
+			network_master_id = 1,
+			name = "mob-" + str(i),
+			data = {
+				name = RandomNameGenerator.generate()
+			}
+		})
 		
-	for mob in MOBS:
+	for mob in battle_setting.mobs:
 		 spawn_mob(mob.network_master_id, mob.name, mob.data, true)
 		
 	_terrain.create_simplex()
 	_terrain.generate_battlefield()
 	
 	
-func join(ip, port):
-	_network.connect_to_server(ip,port, { name = "client player" })
 	
-	for mob in MOBS:
+func join():
+	_network.connect_to_server(battle_setting.ip, battle_setting.port, { name = "client player" })
+	
+	for mob in battle_setting.mobs:
 		 spawn_mob(mob.network_master_id, mob.name, mob.data, false)
-	
 	
 	
 	
@@ -89,6 +84,7 @@ func _on_network_self_connected(player_network_unique_id):
 		_server_advertise.serverInfo["name"] = OS.get_name()
 		_server_advertise.serverInfo["port"] = _network.DEFAULT_PORT
 		_server_advertise.serverInfo["public"] = true
+		_server_advertise.serverInfo["mobs"] = battle_setting.mobs
 		
 		return
 		
