@@ -65,31 +65,6 @@ func join():
 	
 	
 	
-func _on_network_self_connected(player_network_unique_id):
-	var warrior = WARRIOR.instance()
-	warrior.name = str(player_network_unique_id)
-	warrior.set_network_master(player_network_unique_id)
-	warrior.data = _network.self_data.data
-	warrior.label_color = Color.blue
-	warrior.camera = _camera.get_path()
-	_player_holder.add_child(warrior)
-	
-	_camera.set_anchor(warrior)
-	_control.connect("touch_position", warrior, "move_to")
-	connect("attack_target", warrior, "attack_target")
-	
-	if get_tree().is_network_server():
-		
-		_server_advertise.setup()
-		_server_advertise.serverInfo["name"] = OS.get_name()
-		_server_advertise.serverInfo["port"] = _network.DEFAULT_PORT
-		_server_advertise.serverInfo["public"] = true
-		_server_advertise.serverInfo["mobs"] = battle_setting.mobs
-		
-		return
-		
-	rpc_id(_network.PLAYER_HOST_ID,"_request_terrain_data",player_network_unique_id)
-	
 	
 	
 func _on_control_touch_position(pos):
@@ -166,7 +141,40 @@ remote func _send_terrain_data(_terrain_data):
 	_terrain.tile_size = _terrain_data.size
 	_terrain.generate_battlefield()
 	
+func _on_network_server_player_connected(player_network_unique_id, data):
+	var warrior = WARRIOR.instance()
+	warrior.name = str(player_network_unique_id)
+	warrior.set_network_master(player_network_unique_id)
+	warrior.data = data
+	warrior.label_color = Color.blue
+	warrior.camera = _camera.get_path()
+	_player_holder.add_child(warrior)
 	
+	_camera.set_anchor(warrior)
+	_control.connect("touch_position", warrior, "move_to")
+	connect("attack_target", warrior, "attack_target")
+		
+	_server_advertise.setup()
+	_server_advertise.serverInfo["name"] = OS.get_name()
+	_server_advertise.serverInfo["port"] = _network.DEFAULT_PORT
+	_server_advertise.serverInfo["public"] = true
+	_server_advertise.serverInfo["mobs"] = battle_setting.mobs
+	
+func _on_network_client_player_connected(player_network_unique_id, data):
+	var warrior = WARRIOR.instance()
+	warrior.name = str(player_network_unique_id)
+	warrior.set_network_master(player_network_unique_id)
+	warrior.data = data
+	warrior.label_color = Color.blue
+	warrior.camera = _camera.get_path()
+	_player_holder.add_child(warrior)
+	
+	_camera.set_anchor(warrior)
+	_control.connect("touch_position", warrior, "move_to")
+	connect("attack_target", warrior, "attack_target")
+	
+	rpc_id(_network.PLAYER_HOST_ID,"_request_terrain_data",player_network_unique_id)
+
 	
 func _on_network_player_disconnected(_player_network_unique_id):
 	for child in _player_holder.get_children():
@@ -195,6 +203,4 @@ func _on_network_server_disconnected():
 func _on_network_error(err):
 	print(err)
 	
-
-
 
