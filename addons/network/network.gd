@@ -33,13 +33,13 @@ func create_server(max_player : int = MAX_PLAYERS, port :int = DEFAULT_PORT, dat
 	
 func connect_to_server(ip:String = DEFAULT_IP, port :int = DEFAULT_PORT, data: Dictionary = {}):
 	self_data.data = data
-	get_tree().connect('connected_to_server', self, '_connected_to_server')
 	var peer = NetworkedMultiplayerENet.new()
 	var err = peer.create_client(ip,port)
 	if err != OK:
 		emit_signal("error",err)
 		return
-	
+		
+	get_tree().connect('connected_to_server', self, '_connected_to_server')
 	get_tree().set_network_peer(peer)
 	
 func _on_server_disconnected():

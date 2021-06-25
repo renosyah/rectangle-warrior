@@ -26,17 +26,32 @@ onready var _waypoint = $waypoint
 onready var _player_holder = $player_holder
 onready var _mob_holder = $mob_holder
 onready var _network = $network
+onready var _server_advertise = $ServerAdvertiser
 onready var _control = $control
 onready var _camera = $Camera2D
+
+var battle_setting = {
+	mode = "HOST",
+	ip = "",
+	port = 0
+}
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	Engine.set_target_fps(60)
 	
+	var s = SaveLoad.new()
+	battle_setting = s.load_save("battle_setting.data")
+	if not battle_setting:
+		return
+	
+	if battle_setting.mode == "HOST":
+		host()
+	elif battle_setting.mode == "JOIN":
+		join(battle_setting.ip, battle_setting.port)
 	
 	
-func _on_control_host():
-	_control.show_button(false)
+func host():
 	_network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, { name = "host player" })
 		
 	for mob in MOBS:
@@ -45,9 +60,9 @@ func _on_control_host():
 	_terrain.create_simplex()
 	_terrain.generate_battlefield()
 	
-func _on_control_join():
-	_control.show_button(false)
-	_network.connect_to_server("192.168.100.62",_network.DEFAULT_PORT, { name = "client player" })
+	
+func join(ip, port):
+	_network.connect_to_server(ip,port, { name = "client player" })
 	
 	for mob in MOBS:
 		 spawn_mob(mob.network_master_id, mob.name, mob.data, false)
@@ -69,9 +84,17 @@ func _on_network_self_connected(player_network_unique_id):
 	connect("attack_target", warrior, "attack_target")
 	
 	if get_tree().is_network_server():
+		
+		_server_advertise.setup()
+		_server_advertise.serverInfo["name"] = OS.get_name()
+		_server_advertise.serverInfo["port"] = _network.DEFAULT_PORT
+		_server_advertise.serverInfo["public"] = true
+		
 		return
 		
 	rpc_id(_network.PLAYER_HOST_ID,"_request_terrain_data",player_network_unique_id)
+	
+	
 	
 func _on_control_touch_position(pos):
 	_waypoint.show_waypoint(Color.white, pos)
@@ -169,8 +192,8 @@ func _on_network_server_disconnected():
 	for child in _mob_holder.get_children():
 			child.set_process(false)
 			child.queue_free()
-		
-	_control.show_button(true)
+			
+	get_tree().change_scene("res://scene/menu/menu.tscn")
 	
 	
 func _on_network_error(err):

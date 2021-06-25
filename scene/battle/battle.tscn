@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=8 format=2]
 
 [ext_resource path="res://addons/network/network.gd" type="Script" id=1]
 [ext_resource path="res://scene/battle/battle.gd" type="Script" id=2]
@@ -6,6 +6,7 @@
 [ext_resource path="res://addons/mobile-camera/mobile_camera.gd" type="Script" id=4]
 [ext_resource path="res://assets/ui/waypoint/waypoint.tscn" type="PackedScene" id=5]
 [ext_resource path="res://assets/terrain/terrain.tscn" type="PackedScene" id=6]
+[ext_resource path="res://addons/LANServerBroadcast/server_advertiser/ServerAdvertiser.gd" type="Script" id=7]
 
 [node name="battle" type="Node"]
 script = ExtResource( 2 )
@@ -21,6 +22,9 @@ script = ExtResource( 2 )
 [node name="network" type="Node" parent="."]
 script = ExtResource( 1 )
 
+[node name="ServerAdvertiser" type="Node" parent="."]
+script = ExtResource( 7 )
+
 [node name="Camera2D" type="Camera2D" parent="."]
 current = true
 script = ExtResource( 4 )
@@ -33,6 +37,4 @@ script = ExtResource( 4 )
 [connection signal="self_connected" from="network" to="." method="_on_network_self_connected"]
 [connection signal="server_disconnected" from="network" to="." method="_on_network_server_disconnected"]
 [connection signal="disconnect" from="control" to="." method="_on_control_disconnect"]
-[connection signal="host" from="control" to="." method="_on_control_host"]
-[connection signal="join" from="control" to="." method="_on_control_join"]
 [connection signal="touch_position" from="control" to="." method="_on_control_touch_position"]

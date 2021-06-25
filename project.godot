@@ -87,7 +87,7 @@ _global_script_class_icons={
 [application]
 
 config/name="rectangle-warrior"
-run/main_scene="res://scene/battle/battle.tscn"
+run/main_scene="res://scene/menu/menu.tscn"
 config/icon="res://icon.png"
 
 [display]
@@ -95,6 +95,10 @@ config/icon="res://icon.png"
 window/size/width=600
 window/size/height=1024
 window/handheld/orientation="portrait"
+
+[editor_plugins]
+
+enabled=PoolStringArray( "res://addons/LANServerBroadcast/plugin.cfg" )
 
 [input]
 

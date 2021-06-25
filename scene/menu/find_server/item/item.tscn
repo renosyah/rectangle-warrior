@@ -1,0 +1,45 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://assets/ui/fonts/montserrat_eb_16.tres" type="DynamicFont" id=1]
+[ext_resource path="res://assets/ui/fonts/montserrat_eb_32.tres" type="DynamicFont" id=2]
+[ext_resource path="res://scene/menu/find_server/item/item.gd" type="Script" id=3]
+
+[node name="item" type="PanelContainer"]
+margin_right = 600.0
+margin_bottom = 114.0
+rect_min_size = Vector2( 0, 100 )
+script = ExtResource( 3 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 593.0
+margin_bottom = 107.0
+
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer"]
+margin_right = 20.0
+margin_bottom = 100.0
+rect_min_size = Vector2( 20, 0 )
+
+[node name="Label" type="Label" parent="HBoxContainer"]
+margin_left = 24.0
+margin_right = 382.0
+margin_bottom = 100.0
+size_flags_horizontal = 3
+size_flags_vertical = 5
+custom_fonts/font = ExtResource( 1 )
+text = "Server "
+valign = 1
+
+[node name="join_button" type="Button" parent="HBoxContainer"]
+margin_left = 386.0
+margin_right = 586.0
+margin_bottom = 100.0
+rect_min_size = Vector2( 200, 100 )
+custom_fonts/font = ExtResource( 2 )
+text = "Join"
+
+[connection signal="pressed" from="HBoxContainer/join_button" to="." method="_on_join_button_pressed"]

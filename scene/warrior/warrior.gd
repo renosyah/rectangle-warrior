@@ -24,6 +24,7 @@ var rally_point = null # vector2
 
 puppet var _position = position
 puppet var _state = IDLE
+puppet var _dir = 1
 
 var label_color = Color.white
 var data = {}
@@ -47,7 +48,6 @@ func _ready():
 func move_to(_pos: Vector2):
 	rally_point = _pos
 	rpc("_holsted")
-	rpc("_facing_direction",(rally_point - global_position).normalized())
 	set_process(true)
 	
 func attack_target(_target : KinematicBody2D):
@@ -55,12 +55,10 @@ func attack_target(_target : KinematicBody2D):
 	target = _target
 	set_process(true)
 	
-	
-remotesync func _facing_direction(_dir):
+func _check_facing_direction(_dir) -> int:
 	if _dir.x > 0:
-		_body.scale.x = 1
-	else:
-		_body.scale.x = -1
+		return 1
+	return -1
 
 remotesync func _play_attack():
 	_upper_animation.play("punch")
@@ -82,12 +80,15 @@ func _master_move(_delta):
 	var direction = Vector2.ZERO
 	var distance_to_target = 0.0
 	var state = IDLE
+	var facing_dir = 1
 	
 	if rally_point:
 		direction = (rally_point - global_position).normalized()
 		distance_to_target = global_position.distance_to(rally_point)
+		facing_dir = _check_facing_direction(direction)
 		
 		if distance_to_target > 55.0:
+			_body.scale.x = facing_dir
 			velocity = direction * MOVE_SPEED
 			state = WALKING
 			_animation.play("walking")
@@ -103,16 +104,18 @@ func _master_move(_delta):
 	elif target:
 		direction = (target.global_position - global_position).normalized()
 		distance_to_target = global_position.distance_to(target.global_position)
-			
+		facing_dir = _check_facing_direction(direction)
+		
 		if target.is_alive:
-			rpc("_facing_direction", direction)
 			
 			if distance_to_target > RANGE_ATTACK:
+				_body.scale.x = facing_dir
 				state = WALKING
 				_animation.play("walking")
 				velocity = direction * MOVE_SPEED
 				
 			elif distance_to_target <= RANGE_ATTACK:
+				_body.scale.x = facing_dir
 				state = IDLE
 				_animation.play("idle")
 				rpc("_play_attack")
@@ -133,9 +136,12 @@ func _master_move(_delta):
 	
 	rset("_position", position)
 	rset_unreliable("_state", state)
+	rset_unreliable("_dir", facing_dir)
 	
 func _puppet_move():
 	position = _position
+	_body.scale.x = _dir
+	
 	match _state:
 		IDLE:
 			_animation.play("idle")
