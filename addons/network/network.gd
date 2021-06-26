@@ -5,7 +5,7 @@ const DEFAULT_PORT = 31400
 const MAX_PLAYERS = 5
 const PLAYER_HOST_ID = 1
 
-var players_data = {}
+var players = {}
 var data = {}
 
 signal server_player_connected(player_network_unique_id, data)
@@ -13,15 +13,17 @@ signal client_player_connected(player_network_unique_id, data)
 signal player_connected(player_network_unique_id,data)
 signal player_disconnected(player_network_unique_id)
 signal server_disconnected()
+signal connection_closed()
 signal error(err)
 
 func _ready():
-	get_tree().connect('network_peer_connected', self, '_on_player_connected')
-	get_tree().connect('network_peer_disconnected', self, '_on_player_disconnected')
+	get_tree().connect('network_peer_connected', self, '_network_peer_connected')
+	get_tree().connect('network_peer_disconnected', self, '_on_peer_disconnected')
 	get_tree().connect('server_disconnected', self, '_on_server_disconnected')
 	
 func create_server(_max_player : int = MAX_PLAYERS, _port :int = DEFAULT_PORT, _data : Dictionary = {}):
-	players_data[PLAYER_HOST_ID] = _data
+	data = _data
+	players[PLAYER_HOST_ID] = data
 	var peer = NetworkedMultiplayerENet.new()
 	var err = peer.create_server(_port, _max_player)
 	if err != OK:
@@ -29,7 +31,9 @@ func create_server(_max_player : int = MAX_PLAYERS, _port :int = DEFAULT_PORT, _
 		return
 		
 	get_tree().set_network_peer(peer)
-	emit_signal("server_player_connected", PLAYER_HOST_ID, _data)
+	emit_signal("server_player_connected", PLAYER_HOST_ID, data)
+	rpc('_receive_broadcast_player_info', PLAYER_HOST_ID, data)
+	
 	
 func connect_to_server(_ip:String = DEFAULT_IP, _port :int = DEFAULT_PORT, _data: Dictionary = {}):
 	data = _data
@@ -42,6 +46,9 @@ func connect_to_server(_ip:String = DEFAULT_IP, _port :int = DEFAULT_PORT, _data
 	get_tree().connect('connected_to_server', self, '_connected_to_server')
 	get_tree().set_network_peer(peer)
 	
+	
+	
+	
 func _on_server_disconnected():
 	for _signal in get_tree().get_signal_connection_list("connected_to_server"):
 		get_tree().disconnect("connected_to_server",self, _signal.method)
@@ -53,59 +60,72 @@ func _on_server_disconnected():
 func disconnect_from_server():
 	if not is_instance_valid(get_tree().get_network_peer()):
 		return
-		
+	
 	for _signal in get_tree().get_signal_connection_list("connected_to_server"):
 		get_tree().disconnect("connected_to_server",self, _signal.method)
 		
 	get_tree().get_network_peer().close_connection()
+	emit_signal("connection_closed")
+	
+	
 	
 # player connect to server
 # pov from joined player
 func _connected_to_server():
 	var local_player_id = get_tree().get_network_unique_id()
 	emit_signal("client_player_connected", local_player_id, data)
-	rpc('_send_player_info', local_player_id, data)
+	rpc_id(PLAYER_HOST_ID,'_send_player_info', local_player_id, data)
 	
+# server receive data
+# from joined player and prepare
+# puppet for newly joined player
+remote func _send_player_info(player_network_unique_id, _data):
+	if not get_tree().is_network_server():
+		return
+		
+	players[player_network_unique_id] = _data
 	
-# newly join player connect to server
-# pov from other player already join
-func _on_player_connected(connected_player_id):
+	emit_signal("player_connected", player_network_unique_id, _data)
+	
+# this will be emit by everybody
+# except joined player
+func _network_peer_connected(player_network_unique_id):
 	if get_tree().is_network_server():
 		return
 		
-	rpc_id(PLAYER_HOST_ID, '_request_player_info', get_tree().get_network_unique_id(), connected_player_id)
-	
-# server tell other player there is
-# new join player connect to server
-# pov from server player
-remote func _request_player_info(request_from_id, player_network_unique_id):
+	rpc_id(PLAYER_HOST_ID,'_request_player_info', get_tree().get_network_unique_id(), player_network_unique_id)
+
+# other client request
+# data from newly join player
+# to server
+remote func _request_player_info(from_player_network_unique_id, requested_player_network_unique_id):
 	if not get_tree().is_network_server():
 		return
-		
-	if not players_data.has(player_network_unique_id):
+	
+	var _data = players[requested_player_network_unique_id]
+	rpc_id(from_player_network_unique_id,'_receive_player_info', requested_player_network_unique_id, _data)
+	
+# other client receive
+# data from newly join player
+# from server and prepare
+# puppet for newly joined player 
+remote func _receive_player_info(player_network_unique_id, _data):
+	if get_tree().is_network_server():
 		return
 		
-		
-	rpc_id(request_from_id, '_send_player_info', player_network_unique_id, players_data[player_network_unique_id])
-	
-# to spawn new joined player in game
-# once connected,this function call for every
-# other player join before
-# pov from other player already join including server
-remote func _send_player_info(player_network_unique_id, _data):
 	emit_signal("player_connected", player_network_unique_id, _data)
-		
+	
+	
+	
+# this will be emit by everybody
+# except diconnected player
+func _on_peer_disconnected(player_network_unique_id):
+	emit_signal("player_disconnected",player_network_unique_id)
+	
 	if not get_tree().is_network_server():
 		return
 		
-	players_data[player_network_unique_id] = _data
+	players.erase(player_network_unique_id)
 	
-	
-func _on_player_disconnected(player_network_unique_id):
-	if not players_data.has(player_network_unique_id):
-		return
-		
-	players_data.erase(player_network_unique_id)
-	emit_signal("player_disconnected",player_network_unique_id)
 	
 	

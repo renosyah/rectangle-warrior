@@ -36,14 +36,15 @@ func _ready():
 	if camera:
 		_remote_transform.remote_path = camera
 		_remote_transform.update()
-	
+		
 	if data.empty():
 		return
 	
 	_label.text = data.name
 	_label.self_modulate = label_color
 	
-	emit_signal("on_ready", self)
+	_idle_timer.wait_time = 1.0
+	_idle_timer.start()
 	
 func move_to(_pos: Vector2):
 	rally_point = _pos
@@ -54,7 +55,16 @@ func attack_target(_target : KinematicBody2D):
 	rally_point = null
 	target = _target
 	set_process(true)
-	
+
+func get_update_from_master():
+	if not is_instance_valid(get_tree().get_network_peer()):
+		return
+		
+	if is_network_master():
+		return
+		
+	rpc("_get_update_from_master")
+
 func _check_facing_direction(_dir) -> int:
 	if _dir.x > 0:
 		return 1
@@ -66,6 +76,12 @@ remotesync func _play_attack():
 remotesync func _holsted():
 	_upper_animation.play("nothing")
 	
+remote func _get_update_from_master():
+	if not is_network_master():
+		return
+		
+	rset("_position", position)
+	rset_unreliable("_dir", _body.scale.x)
 	
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):

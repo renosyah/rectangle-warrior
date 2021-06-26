@@ -6,10 +6,17 @@ signal on_close()
 signal on_join(info)
 
 onready var _item_container = $PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer
+onready var _server_listener = $ServerListener
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	pass # Replace with function body.
+	
+func start_finding():
+	_server_listener.setup()
+	
+func stop_finding():
+	_server_listener.stop()
 	
 func _on_close_button_pressed():
 	emit_signal("on_close")

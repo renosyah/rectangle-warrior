@@ -24,10 +24,12 @@ func _on_host_button_pressed():
 
 
 func _on_find_button_pressed():
+	_find_server.start_finding()
 	_find_server.visible = true
 
 
 func _on_find_server_on_close():
+	_find_server.stop_finding()
 	_find_server.visible = false
 
 

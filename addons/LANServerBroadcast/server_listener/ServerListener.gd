@@ -21,13 +21,26 @@ func _init():
 	add_child(cleanUpTimer)
 
 func _ready():
+	set_process(false)
+	
+func setup():
 	knownServers.clear()
 	
 	if socketUDP.listen(listenPort) != OK:
 		print("GameServer LAN service: Error listening on port: " + str(listenPort))
 	else:
 		print("GameServer LAN service: Listening on port: " + str(listenPort))
-
+	
+	set_process(true)
+	
+func stop():
+	set_process(false)
+	for ip in knownServers:
+		emit_signal("remove_server", ip)
+		
+	knownServers.clear()
+	
+	
 func _process(delta):
 	if socketUDP.get_available_packet_count() > 0:
 		var serverIp = socketUDP.get_packet_ip()
@@ -48,7 +61,7 @@ func _process(delta):
 			else:
 				var gameInfo = knownServers[serverIp]
 				gameInfo.lastSeen = OS.get_unix_time()
-
+			
 func clean_up():
 	var now = OS.get_unix_time()
 	for serverIp in knownServers:

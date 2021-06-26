@@ -39,7 +39,7 @@ func _ready():
 func host():
 	_network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, { name = "host player" })
 	
-	var mobs_count = _rng.randf_range(1,5)
+	var mobs_count = 1#_rng.randf_range(1,2)
 	for i in mobs_count:
 		battle_setting.mobs.append({
 			network_master_id = 1,
@@ -73,13 +73,33 @@ func _on_control_touch_position(pos):
 func _on_control_disconnect():
 	for child in _player_holder.get_children():
 		child.set_process(false)
-
+		
 	for child in _mob_holder.get_children():
 		child.set_process(false)
 		
 	_network.disconnect_from_server()
-	_on_network_server_disconnected()
 	
+	
+	
+func _on_network_player_connected(player_network_unique_id, data):
+	var warrior = WARRIOR.instance()
+	warrior.name = str(player_network_unique_id)
+	warrior.set_network_master(player_network_unique_id)
+	warrior.data = data
+	warrior.label_color = Color.red
+	warrior.connect("on_click", self,"_on_warrior_click")
+	warrior.connect("on_ready", self, "_on_warrior_ready")
+	warrior.visible = false
+	_player_holder.add_child(warrior)
+	
+	
+func _on_warrior_ready(warrior):
+	warrior.get_update_from_master()
+	warrior.visible = true
+	
+func _on_warrior_click(warrior):
+	_waypoint.show_waypoint(Color.red, warrior.position)
+	emit_signal("attack_target", warrior)
 	
 	
 	
@@ -98,22 +118,6 @@ func spawn_mob(network_master_id, _name, data, is_master):
 	
 func _on_mob_ready(mob):
 	mob.move_to(Vector2(_rng.randf_range(-400,400),_rng.randf_range(-400,400)))
-	
-	
-	
-	
-func _on_network_player_connected(player_network_unique_id, data):
-	var warrior = WARRIOR.instance()
-	warrior.name = str(player_network_unique_id)
-	warrior.set_network_master(player_network_unique_id)
-	warrior.data = data
-	warrior.label_color = Color.red
-	warrior.connect("on_click", self,"_on_warrior_click")
-	_player_holder.add_child(warrior)
-		
-func _on_warrior_click(warrior):
-	_waypoint.show_waypoint(Color.red, warrior.position)
-	emit_signal("attack_target", warrior)
 	
 	
 	
@@ -141,52 +145,45 @@ remote func _send_terrain_data(_terrain_data):
 	_terrain.tile_size = _terrain_data.size
 	_terrain.generate_battlefield()
 	
-func _on_network_server_player_connected(player_network_unique_id, data):
-	var warrior = WARRIOR.instance()
-	warrior.name = str(player_network_unique_id)
-	warrior.set_network_master(player_network_unique_id)
-	warrior.data = data
-	warrior.label_color = Color.blue
-	warrior.camera = _camera.get_path()
-	_player_holder.add_child(warrior)
 	
-	_camera.set_anchor(warrior)
-	_control.connect("touch_position", warrior, "move_to")
-	connect("attack_target", warrior, "attack_target")
-		
+	
+	
+	
+func _on_network_server_player_connected(player_network_unique_id, data):
+	spawn_playable_character(player_network_unique_id, data)
 	_server_advertise.setup()
 	_server_advertise.serverInfo["name"] = OS.get_name()
 	_server_advertise.serverInfo["port"] = _network.DEFAULT_PORT
 	_server_advertise.serverInfo["public"] = true
 	_server_advertise.serverInfo["mobs"] = battle_setting.mobs
 	
+	
 func _on_network_client_player_connected(player_network_unique_id, data):
+	spawn_playable_character(player_network_unique_id, data)
+	rpc_id(_network.PLAYER_HOST_ID,"_request_terrain_data",player_network_unique_id)
+	
+	
+func spawn_playable_character(player_network_unique_id, data):
 	var warrior = WARRIOR.instance()
 	warrior.name = str(player_network_unique_id)
 	warrior.set_network_master(player_network_unique_id)
 	warrior.data = data
 	warrior.label_color = Color.blue
 	warrior.camera = _camera.get_path()
+	warrior.set_process(false)
 	_player_holder.add_child(warrior)
 	
 	_camera.set_anchor(warrior)
 	_control.connect("touch_position", warrior, "move_to")
 	connect("attack_target", warrior, "attack_target")
 	
-	rpc_id(_network.PLAYER_HOST_ID,"_request_terrain_data",player_network_unique_id)
-
 	
-func _on_network_player_disconnected(_player_network_unique_id):
+	
+func _on_network_player_disconnected(player_network_unique_id):
 	for child in _player_holder.get_children():
-		if child.get_network_master() == _player_network_unique_id:
+		if child.get_network_master() == player_network_unique_id:
 			child.set_process(false)
 			child.queue_free()
-			
-	for child in _mob_holder.get_children():
-		if child.get_network_master() == _player_network_unique_id:
-			child.set_process(false)
-			child.queue_free()
-	
 	
 func _on_network_server_disconnected():
 	for child in _player_holder.get_children():
@@ -199,8 +196,9 @@ func _on_network_server_disconnected():
 			
 	get_tree().change_scene("res://scene/menu/menu.tscn")
 	
-	
 func _on_network_error(err):
 	print(err)
 	
-
+	
+func _on_network_connection_closed():
+	_on_network_server_disconnected()
