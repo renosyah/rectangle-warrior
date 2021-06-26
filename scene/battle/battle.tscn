@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://addons/network/network.gd" type="Script" id=1]
 [ext_resource path="res://scene/battle/battle.gd" type="Script" id=2]
@@ -7,6 +7,7 @@
 [ext_resource path="res://assets/ui/waypoint/waypoint.tscn" type="PackedScene" id=5]
 [ext_resource path="res://assets/terrain/terrain.tscn" type="PackedScene" id=6]
 [ext_resource path="res://addons/LANServerBroadcast/server_advertiser/ServerAdvertiser.gd" type="Script" id=7]
+[ext_resource path="res://assets/loading/loading.tscn" type="PackedScene" id=8]
 
 [node name="battle" type="Node"]
 script = ExtResource( 2 )
@@ -29,14 +30,21 @@ script = ExtResource( 7 )
 current = true
 script = ExtResource( 4 )
 
+[node name="loading_timer" type="Timer" parent="."]
+one_shot = true
+
 [node name="control" parent="." instance=ExtResource( 3 )]
+
+[node name="loading" parent="." instance=ExtResource( 8 )]
 
 [connection signal="client_player_connected" from="network" to="." method="_on_network_client_player_connected"]
 [connection signal="connection_closed" from="network" to="." method="_on_network_connection_closed"]
 [connection signal="error" from="network" to="." method="_on_network_error"]
 [connection signal="player_connected" from="network" to="." method="_on_network_player_connected"]
+[connection signal="player_connected_data_receive" from="network" to="." method="_on_network_player_connected_data_receive"]
 [connection signal="player_disconnected" from="network" to="." method="_on_network_player_disconnected"]
 [connection signal="server_disconnected" from="network" to="." method="_on_network_server_disconnected"]
 [connection signal="server_player_connected" from="network" to="." method="_on_network_server_player_connected"]
+[connection signal="timeout" from="loading_timer" to="." method="_on_loading_timer_timeout"]
 [connection signal="disconnect" from="control" to="." method="_on_control_disconnect"]
 [connection signal="touch_position" from="control" to="." method="_on_control_touch_position"]

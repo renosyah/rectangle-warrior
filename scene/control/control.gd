@@ -3,11 +3,16 @@ extends Node2D
 signal touch_position(pos)
 signal disconnect
 
+onready var _control_ui = $CanvasLayer/Control
 onready var _touch_input = $touch_input
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	pass # Replace with function body.
+	
+func show_control(_is_show : bool):
+	_control_ui.visible = _is_show
+	
 	
 func _on_touch_input_any_gesture(_sig, val):
 	if val is InputEventSingleScreenTap:

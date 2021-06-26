@@ -10,7 +10,8 @@ var data = {}
 
 signal server_player_connected(player_network_unique_id, data)
 signal client_player_connected(player_network_unique_id, data)
-signal player_connected(player_network_unique_id,data)
+signal player_connected(player_network_unique_id)
+signal player_connected_data_receive(player_network_unique_id,data)
 signal player_disconnected(player_network_unique_id)
 signal server_disconnected()
 signal connection_closed()
@@ -30,6 +31,7 @@ func create_server(_max_player : int = MAX_PLAYERS, _port :int = DEFAULT_PORT, _
 		emit_signal("error",err)
 		return
 		
+	get_tree().set_network_peer(null) 
 	get_tree().set_network_peer(peer)
 	emit_signal("server_player_connected", PLAYER_HOST_ID, data)
 	rpc('_receive_broadcast_player_info', PLAYER_HOST_ID, data)
@@ -44,6 +46,7 @@ func connect_to_server(_ip:String = DEFAULT_IP, _port :int = DEFAULT_PORT, _data
 		return
 		
 	get_tree().connect('connected_to_server', self, '_connected_to_server')
+	get_tree().set_network_peer(null) 
 	get_tree().set_network_peer(peer)
 	
 	
@@ -65,6 +68,7 @@ func disconnect_from_server():
 		get_tree().disconnect("connected_to_server",self, _signal.method)
 		
 	get_tree().get_network_peer().close_connection()
+	get_tree().set_network_peer(null) 
 	emit_signal("connection_closed")
 	
 	
@@ -84,14 +88,16 @@ remote func _send_player_info(player_network_unique_id, _data):
 		return
 		
 	players[player_network_unique_id] = _data
-	
-	emit_signal("player_connected", player_network_unique_id, _data)
+	emit_signal("player_connected", player_network_unique_id)
+	emit_signal("player_connected_data_receive", player_network_unique_id, _data)
 	
 # this will be emit by everybody
 # except joined player
 func _network_peer_connected(player_network_unique_id):
 	if get_tree().is_network_server():
 		return
+		
+	emit_signal("player_connected", player_network_unique_id)
 		
 	rpc_id(PLAYER_HOST_ID,'_request_player_info', get_tree().get_network_unique_id(), player_network_unique_id)
 
@@ -113,7 +119,7 @@ remote func _receive_player_info(player_network_unique_id, _data):
 	if get_tree().is_network_server():
 		return
 		
-	emit_signal("player_connected", player_network_unique_id, _data)
+	emit_signal("player_connected_data_receive", player_network_unique_id, _data)
 	
 	
 	
