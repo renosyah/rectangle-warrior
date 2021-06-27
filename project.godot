@@ -60,11 +60,6 @@ _global_script_classes=[ {
 "path": "res://addons/random-name/random_names.gd"
 }, {
 "base": "Node",
-"class": "SaveFileName",
-"language": "GDScript",
-"path": "res://assets/data/save_file_name.gd"
-}, {
-"base": "Node",
 "class": "SaveLoad",
 "language": "GDScript",
 "path": "res://addons/save_load/save_load.gd"
@@ -90,7 +85,6 @@ _global_script_class_icons={
 "InputEventSingleScreenTouch": "",
 "MobileCamera": "",
 "RandomNameGenerator": "",
-"SaveFileName": "",
 "SaveLoad": "",
 "ServerAdvertiser": "res://addons/LANServerBroadcast/server_advertiser/server_advertiser.png",
 "ServerListener": "res://addons/LANServerBroadcast/server_listener/server_listener.png"
@@ -101,6 +95,10 @@ _global_script_class_icons={
 config/name="rectangle-warrior"
 run/main_scene="res://scene/menu/menu.tscn"
 config/icon="res://icon.png"
+
+[autoload]
+
+Global="*res://assets/script/Global.gd"
 
 [display]
 

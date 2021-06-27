@@ -16,25 +16,11 @@ onready var _camera = $Camera2D
 onready var _loading_time = $loading_timer
 onready var _loading = $loading
 
-var battle_setting = {
-	mode = "HOST",
-	ip = "",
-	port = 0,
-	mobs = []
-}
-
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	Engine.set_target_fps(60)
-	
-	var s = SaveLoad.new()
-	battle_setting = s.load_save(SaveFileName.BATTLE_SETTING_FILENAME)
-	if not battle_setting:
-		return
-	
-	if battle_setting.mode == "HOST":
+	if Global.battle_setting.mode == "HOST":
 		host()
-	elif battle_setting.mode == "JOIN":
+	elif Global.battle_setting.mode == "JOIN":
 		join()
 		
 	_loading.show_loading(true)
@@ -42,10 +28,11 @@ func _ready():
 	
 func host():
 	_network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, { name = "host player" })
+	Global.battle_setting.mobs.clear()
 	
 	var mobs_count = _rng.randf_range(1,5)
 	for i in mobs_count:
-		battle_setting.mobs.append({
+		Global.battle_setting.mobs.append({
 			network_master_id = 1,
 			name = "mob-" + str(i),
 			data = {
@@ -53,7 +40,7 @@ func host():
 			}
 		})
 		
-	for mob in battle_setting.mobs:
+	for mob in Global.battle_setting.mobs:
 		 spawn_mob(mob.network_master_id, mob.name, mob.data, true)
 		
 	_terrain.create_simplex()
@@ -62,9 +49,9 @@ func host():
 	
 	
 func join():
-	_network.connect_to_server(battle_setting.ip, battle_setting.port, { name = "client player" })
+	_network.connect_to_server(Global.battle_setting.ip, Global.battle_setting.port, { name = "client player" })
 	
-	for mob in battle_setting.mobs:
+	for mob in Global.battle_setting.mobs:
 		 spawn_mob(mob.network_master_id, mob.name, mob.data, false)
 	
 	
@@ -101,7 +88,7 @@ func _on_network_player_connected_data_receive(player_network_unique_id, data):
 	_puppet_warrior.data = data
 	_puppet_warrior.label_color = Color.red
 	_puppet_warrior.connect("on_click", self,"_on_warrior_click")
-	_puppet_warrior.request_update_from_master()
+	_puppet_warrior.make_ready()
 	
 func _on_warrior_click(warrior):
 	_waypoint.show_waypoint(Color.red, warrior.position)
@@ -157,7 +144,7 @@ func _on_network_server_player_connected(player_network_unique_id, data):
 	_server_advertise.serverInfo["name"] = OS.get_name()
 	_server_advertise.serverInfo["port"] = _network.DEFAULT_PORT
 	_server_advertise.serverInfo["public"] = true
-	_server_advertise.serverInfo["mobs"] = battle_setting.mobs
+	_server_advertise.serverInfo["mobs"] = Global.battle_setting.mobs
 	
 	
 func _on_network_client_player_connected(player_network_unique_id, data):

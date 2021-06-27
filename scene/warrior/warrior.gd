@@ -1,7 +1,7 @@
 extends KinematicBody2D
 
 enum { IDLE,WALKING }
-const MOVE_SPEED = 120.0
+const MOVE_SPEED = 140.0
 const RANGE_ATTACK = 80.0
 
 signal on_click(warrior)
@@ -16,21 +16,30 @@ onready var _idle_timer = $Timer
 onready var _remote_transform = $RemoteTransform2D
 onready var _touch_input = $touch_input
 onready var _attack_delay = $attack_delay
+onready var _tween = $Tween
 
 var is_alive = true
 var target : KinematicBody2D = null
 var camera = null # nodePath
 var rally_point = null # vector2
 
-puppet var _position = position
-puppet var _state = IDLE
-puppet var _dir = 1
+var _velocity = Vector2.ZERO
+var _state = IDLE
+var _facing_direction = 1
+
+puppet var _puppet_position = position setget puppet_position_set
+puppet var _puppet_state = IDLE
+puppet var _puppet_facing_direction = 1
+puppet var _puppet_velocity = Vector2.ZERO
 
 var label_color = Color.white
 var data = {}
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	make_ready()
+	
+func make_ready():
 	set_physics_process(false)
 	
 	if camera:
@@ -56,23 +65,17 @@ func attack_target(_target : KinematicBody2D):
 	target = _target
 	set_process(true)
 	
-func _check_facing_direction(_dir) -> int:
-	if _dir.x > 0:
+func _check_facing_direction(_direction) -> int:
+	if _direction.x > 0:
 		return 1
 	return -1
+
+
+func puppet_position_set(_val):
+	_puppet_position = _val
+	_tween.interpolate_property(self,"position", position, _puppet_position, 0.1)
+	_tween.start()
 	
-func request_update_from_master():
-	
-	_ready()
-	
-	if not is_instance_valid(get_tree().get_network_peer()):
-		return
-		
-	if is_network_master():
-		return
-		
-		
-	rpc("_send_update_from_master")
 	
 	
 remotesync func _play_attack():
@@ -82,90 +85,83 @@ remotesync func _holsted():
 	_upper_animation.play("nothing")
 	
 	
-remote func _send_update_from_master():
-	if not is_network_master():
-		return
-		
-	rset("_position", position)
-	rset_unreliable("_dir", _body.scale.x)
-	
 	
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
 	if is_network_master():
 		_master_move(_delta)
 	else:
-		_puppet_move()
-		
+		puppet_update(_delta)
 	
 func _master_move(_delta):
-	var velocity = Vector2.ZERO
-	var direction = Vector2.ZERO
 	var distance_to_target = 0.0
-	var state = IDLE
-	var facing_dir = 1
 	
 	if rally_point:
-		direction = (rally_point - global_position).normalized()
+		var direction = (rally_point - global_position).normalized()
 		distance_to_target = global_position.distance_to(rally_point)
-		facing_dir = _check_facing_direction(direction)
+		_facing_direction = _check_facing_direction(direction)
 		
 		if distance_to_target > 55.0:
-			_body.scale.x = facing_dir
-			velocity = direction * MOVE_SPEED
-			state = WALKING
+			_state = WALKING
 			_animation.play("walking")
+			_body.scale.x = _facing_direction
+			
+			_velocity = direction * MOVE_SPEED
 			
 		else:
-			state = IDLE
+			_state = IDLE
 			_animation.play("idle")
 			rally_point = null
 			set_process(false)
+			
 			_idle_timer.wait_time = _rng.randf_range(1,2)
 			_idle_timer.start()
 			
-	elif target:
-		direction = (target.global_position - global_position).normalized()
+			_velocity = Vector2.ZERO
+			
+	elif is_instance_valid(target):
+		var direction = (target.global_position - global_position).normalized()
 		distance_to_target = global_position.distance_to(target.global_position)
-		facing_dir = _check_facing_direction(direction)
+		_facing_direction = _check_facing_direction(direction)
 		
 		if target.is_alive:
-			
 			if distance_to_target > RANGE_ATTACK:
-				_body.scale.x = facing_dir
-				state = WALKING
+				_state = WALKING
 				_animation.play("walking")
-				velocity = direction * MOVE_SPEED
+				_body.scale.x = _facing_direction
+				
+				_velocity = direction * MOVE_SPEED
 				
 			elif distance_to_target <= RANGE_ATTACK:
-				_body.scale.x = facing_dir
-				state = IDLE
+				_body.scale.x = _facing_direction
+				_state = IDLE
 				_animation.play("idle")
 				rpc("_play_attack")
+				
 				if _attack_delay.is_stopped():
 					_attack_delay.wait_time = 1.0
 					_attack_delay.start()
 					
+				_velocity = Vector2.ZERO
+				
 		else:
 			rpc("_holsted")
 			target = null
 			
 	else:
-		state = IDLE
+		_state = IDLE
 		_animation.play("idle")
 		set_process(false)
 		
-	move_and_slide(velocity)
-	
-	rset("_position", position)
-	rset_unreliable("_state", state)
-	rset_unreliable("_dir", facing_dir)
-	
-func _puppet_move():
-	position = _position
-	_body.scale.x = _dir
-	
-	match _state:
+	_velocity = move_and_slide(_velocity)
+		
+		
+func puppet_update(_delta):
+	_body.scale.x = _puppet_facing_direction
+	if not _tween.is_active():
+		move_and_slide(_puppet_velocity)
+		
+	match _puppet_state:
 		IDLE:
 			_animation.play("idle")
 		WALKING:
@@ -189,8 +185,17 @@ func _on_touch_input_any_gesture(_sig, val):
 func on_warrior_click():
 	emit_signal("on_click", self)
 	
+func _on_network_tickrate_timeout():
+	if is_network_master():
+		rset_unreliable("_puppet_position", position)
+		rset_unreliable("_puppet_state", _state)
+		rset_unreliable("_puppet_facing_direction", _facing_direction)
+		rset_unreliable("_puppet_velocity", _velocity)
 	
-	
-	
-	
+
+
+
+
+
+
 

@@ -343,8 +343,10 @@ script = ExtResource( 3 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource( 1 )
+disabled = true
 
 [node name="body" type="Node2D" parent="."]
+position = Vector2( 0, -11.0822 )
 
 [node name="arm_left_joint" type="Sprite" parent="body"]
 position = Vector2( 5.43137, -3.1839 )
@@ -377,11 +379,13 @@ rotation = 0.446492
 texture = ExtResource( 5 )
 
 [node name="leg_left" type="Sprite" parent="body"]
-position = Vector2( 7.89144, 59.9612 )
+position = Vector2( 21.33, 60.2952 )
+rotation = -0.705794
 texture = ExtResource( 4 )
 
 [node name="leg_right" type="Sprite" parent="body"]
-position = Vector2( -4.07211, 64.6916 )
+position = Vector2( -10.808, 64.0238 )
+rotation = 0.377778
 texture = ExtResource( 4 )
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="body"]
@@ -438,6 +442,13 @@ script = ExtResource( 7 )
 [node name="attack_delay" type="Timer" parent="."]
 one_shot = true
 
+[node name="network_tickrate" type="Timer" parent="."]
+wait_time = 0.08
+autostart = true
+
+[node name="Tween" type="Tween" parent="."]
+
 [connection signal="gui_input" from="Node2D/Control" to="." method="_on_Control_gui_input"]
 [connection signal="timeout" from="Timer" to="." method="_on_Timer_timeout"]
 [connection signal="any_gesture" from="touch_input" to="." method="_on_touch_input_any_gesture"]
+[connection signal="timeout" from="network_tickrate" to="." method="_on_network_tickrate_timeout"]

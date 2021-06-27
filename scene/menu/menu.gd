@@ -2,24 +2,12 @@ extends Node
 
 onready var _find_server = $CanvasLayer/find_server
 
-var battle_setting = {
-	mode = "HOST",
-	ip = "",
-	port = 0,
-	mobs = []
-}
-
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	var s = SaveLoad.new()
-	s.delete_save(SaveFileName.BATTLE_SETTING_FILENAME)
+	pass
 
 func _on_host_button_pressed():
-	battle_setting.mode = "HOST"
-	
-	var s = SaveLoad.new()
-	s.save(SaveFileName.BATTLE_SETTING_FILENAME, battle_setting)
-	
+	Global.battle_setting.mode = "HOST"
 	get_tree().change_scene("res://scene/battle/battle.tscn")
 
 
@@ -34,13 +22,10 @@ func _on_find_server_on_close():
 
 
 func _on_find_server_on_join(info):
-	battle_setting.mode = "JOIN"
-	battle_setting.ip = info["ip"]
-	battle_setting.port = info["port"]
-	battle_setting.mobs = info["mobs"]
-	
-	var s = SaveLoad.new()
-	s.save(SaveFileName.BATTLE_SETTING_FILENAME, battle_setting)
+	Global.battle_setting.mode = "JOIN"
+	Global.battle_setting.ip = info["ip"]
+	Global.battle_setting.port = info["port"]
+	Global.battle_setting.mobs = info["mobs"]
 	
 	get_tree().change_scene("res://scene/battle/battle.tscn")
 	

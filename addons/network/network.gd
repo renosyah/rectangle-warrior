@@ -68,7 +68,7 @@ func disconnect_from_server():
 		get_tree().disconnect("connected_to_server",self, _signal.method)
 		
 	get_tree().get_network_peer().close_connection()
-	get_tree().set_network_peer(null) 
+	get_tree().set_network_peer(null)
 	emit_signal("connection_closed")
 	
 	
