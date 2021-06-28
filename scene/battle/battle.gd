@@ -32,7 +32,7 @@ func host():
 	_network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, { name = "host player" })
 	Global.battle_setting.mobs.clear()
 	
-	var mobs_count = _rng.randf_range(1,5)
+	var mobs_count = 10 #_rng.randf_range(1,5)
 	for i in mobs_count:
 		Global.battle_setting.mobs.append({
 			network_master_id = 1,
@@ -112,6 +112,7 @@ func spawn_mob(network_master_id, _name, data, is_host_master):
 	warrior.name = _name
 	warrior.data = data
 	warrior.label_color = Color.gray
+	warrior.position = _get_random_position()
 	warrior.set_network_master(network_master_id)
 	warrior.connect("on_click", self,"_on_mob_click")
 	_mob_holder.add_child(warrior)
@@ -122,7 +123,7 @@ func spawn_mob(network_master_id, _name, data, is_host_master):
 		warrior.connect("on_dead", self, "_on_mob_dead")
 	
 func _on_mob_ready(mob):
-	mob.move_to(Vector2(_rng.randf_range(-400,400),_rng.randf_range(-400,400)))
+	mob.move_to(Vector2(_rng.randf_range(-800,800),_rng.randf_range(-800,800)))
 	if randf() < 0.10:
 		var _targets = _player_holder.get_children() + _mob_holder.get_children()
 		var _target = _targets[rand_range(0,_targets.size())]
@@ -136,10 +137,11 @@ func _on_mob_click(mob):
 	emit_signal("attack_target", mob)
 	
 func _on_mob_dead(mob, _killed_by):
-	mob.position = Vector2(_rng.randf_range(-400,400),_rng.randf_range(-400,400))
+	mob.position = _get_random_position()
 	mob.set_spawn_time()
 	
-	
+func _get_random_position() -> Vector2:
+	return Vector2(_rng.randf_range(-400,400),_rng.randf_range(-400,400))
 	
 	
 	

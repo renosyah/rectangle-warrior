@@ -1,10 +1,11 @@
 extends KinematicBody2D
 
 enum { IDLE,WALKING }
-const MOVE_SPEED = 140.0
+const MOVE_SPEED = 90.0
 const RANGE_ATTACK = 80.0
 var HIT_POINT = 10.0
 var ATTACK_DMG = 1.0
+var ATTACK_ACCURACY = 0.5
 
 signal on_click(warrior)
 signal on_ready(warrior)
@@ -22,6 +23,7 @@ onready var _attack_delay = $attack_delay
 onready var _tween = $Tween
 onready var _spawn_time = $spawn_time
 onready var _hitpoint = $Node2D/hitpoint
+onready var _hit_delay = $hit_delay
 
 var is_alive = true
 var target : KinematicBody2D = null
@@ -92,18 +94,22 @@ func puppet_position_set(_val):
 	
 	
 remotesync func _play_attack():
-	_upper_animation.play("punch")
+	_upper_animation.play("swing")
 	
 remotesync func _holsted():
 	_upper_animation.play("nothing")
 	
 func _on_attack_execute():
 	if is_network_master() and is_instance_valid(target):
-		target.rpc("hit", ATTACK_DMG, data.name)
+		if _rng.randf() < ATTACK_ACCURACY:
+			target.rpc("hit", ATTACK_DMG, data.name)
 
 remotesync func hit(_dmg, _by):
 	HIT_POINT -= _dmg
 	_hitpoint.value = HIT_POINT
+	_body.modulate = Color.red
+	_hit_delay.start()
+	
 	if HIT_POINT < 0.0:
 		rpc("die", _by)
 	
@@ -167,8 +173,6 @@ func _master_move(_delta):
 				
 			elif distance_to_target <= RANGE_ATTACK:
 				_body.scale.x = _facing_direction
-				_state = IDLE
-				_animation.play("idle")
 				rpc("_play_attack")
 				
 				if _attack_delay.is_stopped():
@@ -248,3 +252,7 @@ remotesync func spawn():
 	is_alive = true
 	visible = true
 	emit_signal("on_ready", self)
+
+
+func _on_hit_delay_timeout():
+	_body.modulate = Color.white
