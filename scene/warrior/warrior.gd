@@ -3,9 +3,12 @@ extends KinematicBody2D
 enum { IDLE,WALKING }
 const MOVE_SPEED = 140.0
 const RANGE_ATTACK = 80.0
+var HIT_POINT = 10.0
+var ATTACK_DMG = 1.0
 
 signal on_click(warrior)
 signal on_ready(warrior)
+signal on_dead(warrior, killed_by)
 
 onready var _rng = RandomNumberGenerator.new()
 onready var _label = $Node2D/Label
@@ -17,6 +20,8 @@ onready var _remote_transform = $RemoteTransform2D
 onready var _touch_input = $touch_input
 onready var _attack_delay = $attack_delay
 onready var _tween = $Tween
+onready var _spawn_time = $spawn_time
+onready var _hitpoint = $Node2D/hitpoint
 
 var is_alive = true
 var target : KinematicBody2D = null
@@ -52,15 +57,23 @@ func make_ready():
 	_label.text = data.name
 	_label.self_modulate = label_color
 	
+	_hitpoint.value = HIT_POINT
+
 	_idle_timer.wait_time = 1.0
 	_idle_timer.start()
 	
 func move_to(_pos: Vector2):
+	if not is_alive:
+		return
+		
 	rally_point = _pos
 	rpc("_holsted")
 	set_process(true)
 	
 func attack_target(_target : KinematicBody2D):
+	if not is_alive:
+		return
+		
 	rally_point = null
 	target = _target
 	set_process(true)
@@ -84,8 +97,21 @@ remotesync func _play_attack():
 remotesync func _holsted():
 	_upper_animation.play("nothing")
 	
+func _on_attack_execute():
+	if is_network_master() and is_instance_valid(target):
+		target.rpc("hit", ATTACK_DMG, data.name)
+
+remotesync func hit(_dmg, _by):
+	HIT_POINT -= _dmg
+	_hitpoint.value = HIT_POINT
+	if HIT_POINT < 0.0:
+		rpc("die", _by)
 	
-	
+remotesync func die(_killed_by):
+	is_alive = false
+	visible = false
+	emit_signal("on_dead", self, _killed_by)
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
 	if is_network_master():
@@ -95,6 +121,13 @@ func _process(_delta):
 	
 func _master_move(_delta):
 	var distance_to_target = 0.0
+	
+	if not is_alive:
+		_state = IDLE
+		_animation.play("idle")
+		rpc("_holsted")
+		target = null
+		set_process(false)
 	
 	if rally_point:
 		var direction = (rally_point - global_position).normalized()
@@ -145,13 +178,22 @@ func _master_move(_delta):
 				_velocity = Vector2.ZERO
 				
 		else:
+			_state = IDLE
+			_animation.play("idle")
 			rpc("_holsted")
 			target = null
+			set_process(false)
+			
+			_idle_timer.wait_time = _rng.randf_range(1,2)
+			_idle_timer.start()
 			
 	else:
 		_state = IDLE
 		_animation.play("idle")
 		set_process(false)
+		
+		_idle_timer.wait_time = _rng.randf_range(1,2)
+		_idle_timer.start()
 		
 	_velocity = move_and_slide(_velocity)
 		
@@ -192,10 +234,17 @@ func _on_network_tickrate_timeout():
 		rset_unreliable("_puppet_facing_direction", _facing_direction)
 		rset_unreliable("_puppet_velocity", _velocity)
 	
-
-
-
-
-
-
-
+	
+func _on_spawn_time_timeout():
+	rpc("spawn")
+	
+func set_spawn_time():
+	_spawn_time.wait_time = 5.0
+	_spawn_time.start()
+	
+remotesync func spawn():
+	HIT_POINT = 10.0
+	_hitpoint.value = HIT_POINT
+	is_alive = true
+	visible = true
+	emit_signal("on_ready", self)

@@ -15,6 +15,7 @@ onready var _control = $control
 onready var _camera = $Camera2D
 onready var _loading_time = $loading_timer
 onready var _loading = $loading
+onready var _deadscreen = $deadscreen
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -22,9 +23,10 @@ func _ready():
 		host()
 	elif Global.battle_setting.mode == "JOIN":
 		join()
-		
+		 
 	_loading.show_loading(true)
 	_control.show_control(false)
+	_deadscreen.show_deadscreen(false)
 	
 func host():
 	_network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, { name = "host player" })
@@ -46,8 +48,6 @@ func host():
 	_terrain.create_simplex()
 	_terrain.generate_battlefield()
 	
-	
-	
 func join():
 	_network.connect_to_server(Global.battle_setting.ip, Global.battle_setting.port, { name = "client player" })
 	
@@ -57,7 +57,7 @@ func join():
 	
 	
 	
-	
+# user interaction section
 func _on_control_touch_position(pos):
 	_waypoint.show_waypoint(Color.white, pos)
 	
@@ -72,6 +72,11 @@ func _on_control_disconnect():
 	
 	
 	
+	
+	
+	
+	
+# player puppet section
 func _on_network_player_connected(player_network_unique_id):
 	var _puppet_warrior = WARRIOR.instance()
 	_puppet_warrior.name = str(player_network_unique_id)
@@ -96,23 +101,49 @@ func _on_warrior_click(warrior):
 	
 	
 	
-func spawn_mob(network_master_id, _name, data, is_master):
+	
+	
+	
+	
+	
+# mob section
+func spawn_mob(network_master_id, _name, data, is_host_master):
 	var warrior = WARRIOR.instance()
 	warrior.name = _name
 	warrior.data = data
 	warrior.label_color = Color.gray
 	warrior.set_network_master(network_master_id)
-	warrior.connect("on_click", self,"_on_warrior_click")
+	warrior.connect("on_click", self,"_on_mob_click")
 	_mob_holder.add_child(warrior)
 	
-	if is_master:
+	if is_host_master:
 		_on_mob_ready(warrior)
 		warrior.connect("on_ready", self, "_on_mob_ready")
+		warrior.connect("on_dead", self, "_on_mob_dead")
 	
 func _on_mob_ready(mob):
 	mob.move_to(Vector2(_rng.randf_range(-400,400),_rng.randf_range(-400,400)))
+	if randf() < 0.10:
+		var _targets = _player_holder.get_children() + _mob_holder.get_children()
+		var _target = _targets[rand_range(0,_targets.size())]
+		if _target == mob:
+			return
+			
+		mob.attack_target(_target)
+		
+func _on_mob_click(mob):
+	_waypoint.show_waypoint(Color.red, mob.position)
+	emit_signal("attack_target", mob)
+	
+func _on_mob_dead(mob, _killed_by):
+	mob.position = Vector2(_rng.randf_range(-400,400),_rng.randf_range(-400,400))
+	mob.set_spawn_time()
 	
 	
+	
+	
+	
+# client request terrain data section
 remote func _request_terrain_data(from_id):
 	if not get_tree().is_network_server():
 		return
@@ -124,7 +155,7 @@ remote func _request_terrain_data(from_id):
 	}
 		
 	rpc_id(from_id,"_send_terrain_data", _terrain_data)
-		
+	
 remote func _send_terrain_data(_terrain_data):
 	if get_tree().is_network_server():
 		return
@@ -138,6 +169,9 @@ remote func _send_terrain_data(_terrain_data):
 	_terrain.generate_battlefield()
 	
 	
+	
+	
+# player connection as host/client section
 func _on_network_server_player_connected(player_network_unique_id, data):
 	spawn_playable_character(player_network_unique_id, data)
 	_server_advertise.setup()
@@ -152,6 +186,10 @@ func _on_network_client_player_connected(player_network_unique_id, data):
 	rpc_id(_network.PLAYER_HOST_ID,"_request_terrain_data",player_network_unique_id)
 	
 	
+	
+	
+	
+# player playable character section
 func spawn_playable_character(player_network_unique_id, data):
 	var warrior = WARRIOR.instance()
 	warrior.name = str(player_network_unique_id)
@@ -160,6 +198,8 @@ func spawn_playable_character(player_network_unique_id, data):
 	warrior.label_color = Color.blue
 	warrior.camera = _camera.get_path()
 	warrior.set_process(false)
+	warrior.connect("on_ready", self, "_on_player_ready")
+	warrior.connect("on_dead", self, "_on_player_dead")
 	_player_holder.add_child(warrior)
 	
 	_camera.set_anchor(warrior)
@@ -169,7 +209,18 @@ func spawn_playable_character(player_network_unique_id, data):
 	_loading_time.wait_time = 1.0
 	_loading_time.start()
 	
+func _on_player_ready(warrior):
+	_deadscreen.show_deadscreen(false)
 	
+func _on_player_dead(warrior, killed_by):
+	warrior.position = Vector2(_rng.randf_range(-400,400),_rng.randf_range(-400,400))
+	warrior.set_spawn_time()
+	_deadscreen.show_deadscreen(true, killed_by)
+	
+	
+	
+	
+# network event section
 func _on_network_player_disconnected(player_network_unique_id):
 	for child in _player_holder.get_children():
 		if child.get_network_master() == player_network_unique_id:
@@ -190,10 +241,8 @@ func _on_network_server_disconnected():
 func _on_network_error(err):
 	print(err)
 	
-	
 func _on_network_connection_closed():
 	_on_network_server_disconnected()
-	
 	
 func _on_loading_timer_timeout():
 	_loading.show_loading(false)
