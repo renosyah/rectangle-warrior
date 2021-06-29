@@ -1,8 +1,14 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://addons/Godot-Touch-Input-Manager/InputManager.gd" type="Script" id=1]
 [ext_resource path="res://scene/control/control.gd" type="Script" id=2]
+[ext_resource path="res://assets/ui/mini_map/MiniMap.tscn" type="PackedScene" id=3]
 [ext_resource path="res://assets/ui/fonts/montserrat_eb_16.tres" type="DynamicFont" id=4]
+[ext_resource path="res://assets/ui/icons/auto_play_start.png" type="Texture" id=5]
+[ext_resource path="res://assets/ui/icons/close.png" type="Texture" id=6]
+[ext_resource path="res://assets/ui/icons/map.png" type="Texture" id=7]
+[ext_resource path="res://assets/ui/fonts/montserrat_eb_48.tres" type="DynamicFont" id=8]
+[ext_resource path="res://assets/ui/fonts/montserrat_eb_32.tres" type="DynamicFont" id=9]
 
 [node name="control" type="Node2D"]
 script = ExtResource( 2 )
@@ -20,17 +26,177 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="MiniMap" parent="CanvasLayer/Control" instance=ExtResource( 3 )]
+
 [node name="disconnect_button" type="Button" parent="CanvasLayer/Control"]
 anchor_left = 1.0
 anchor_right = 1.0
-margin_left = -200.0
+margin_left = -80.0
 margin_bottom = 80.0
-rect_min_size = Vector2( 200, 80 )
+rect_min_size = Vector2( 80, 80 )
 custom_fonts/font = ExtResource( 4 )
-text = "Disconnect"
+icon = ExtResource( 6 )
+expand_icon = true
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="bottom_menu" type="VBoxContainer" parent="CanvasLayer/Control"]
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_top = -128.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="MarginContainer2" type="MarginContainer" parent="CanvasLayer/Control/bottom_menu"]
+margin_right = 600.0
+margin_bottom = 10.0
+rect_min_size = Vector2( 0, 10 )
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/Control/bottom_menu"]
+margin_top = 14.0
+margin_right = 600.0
+margin_bottom = 114.0
+
+[node name="MarginContainer5" type="MarginContainer" parent="CanvasLayer/Control/bottom_menu/HBoxContainer"]
+margin_right = 10.0
+margin_bottom = 100.0
+rect_min_size = Vector2( 10, 10 )
+
+[node name="expand_map_button" type="Button" parent="CanvasLayer/Control/bottom_menu/HBoxContainer"]
+margin_left = 14.0
+margin_right = 114.0
+margin_bottom = 100.0
+rect_min_size = Vector2( 100, 100 )
+toggle_mode = true
+icon = ExtResource( 7 )
+expand_icon = true
+
+[node name="MarginContainer3" type="MarginContainer" parent="CanvasLayer/Control/bottom_menu/HBoxContainer"]
+margin_left = 118.0
+margin_right = 482.0
+margin_bottom = 100.0
+size_flags_horizontal = 3
+
+[node name="autoplay_button" type="Button" parent="CanvasLayer/Control/bottom_menu/HBoxContainer"]
+margin_left = 486.0
+margin_right = 586.0
+margin_bottom = 100.0
+rect_min_size = Vector2( 100, 100 )
+toggle_mode = true
+icon = ExtResource( 5 )
+expand_icon = true
+
+[node name="MarginContainer4" type="MarginContainer" parent="CanvasLayer/Control/bottom_menu/HBoxContainer"]
+margin_left = 590.0
+margin_right = 600.0
+margin_bottom = 100.0
+rect_min_size = Vector2( 10, 10 )
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/Control/bottom_menu"]
+margin_top = 118.0
+margin_right = 600.0
+margin_bottom = 128.0
+rect_min_size = Vector2( 0, 10 )
+
+[node name="disconect_dialog_confirm" type="PanelContainer" parent="CanvasLayer/Control"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -250.0
+margin_top = -183.0
+margin_right = 250.0
+margin_bottom = 183.0
+rect_min_size = Vector2( 200, 200 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Control/disconect_dialog_confirm"]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 493.0
+margin_bottom = 359.0
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer"]
+margin_right = 486.0
+margin_bottom = 60.0
+custom_fonts/font = ExtResource( 8 )
+text = "Disconnect"
+align = 1
+valign = 1
+
+[node name="Label2" type="Label" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer"]
+margin_top = 64.0
+margin_right = 486.0
+margin_bottom = 190.0
+custom_fonts/font = ExtResource( 9 )
+text = "
+Are you sure 
+want to disconnect?"
+align = 1
+valign = 1
+
+[node name="MarginContainer2" type="MarginContainer" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer"]
+margin_top = 194.0
+margin_right = 486.0
+margin_bottom = 234.0
+rect_min_size = Vector2( 0, 40 )
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer"]
+margin_top = 238.0
+margin_right = 486.0
+margin_bottom = 338.0
+rect_min_size = Vector2( 0, 100 )
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer/HBoxContainer"]
+margin_right = 10.0
+margin_bottom = 100.0
+rect_min_size = Vector2( 10, 0 )
+
+[node name="yes" type="Button" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer/HBoxContainer"]
+margin_left = 14.0
+margin_right = 234.0
+margin_bottom = 100.0
+rect_min_size = Vector2( 80, 0 )
+size_flags_horizontal = 3
+custom_fonts/font = ExtResource( 8 )
+text = "Yes"
+
+[node name="MarginContainer2" type="MarginContainer" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer/HBoxContainer"]
+margin_left = 238.0
+margin_right = 248.0
+margin_bottom = 100.0
+rect_min_size = Vector2( 10, 0 )
+
+[node name="no" type="Button" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer/HBoxContainer"]
+margin_left = 252.0
+margin_right = 472.0
+margin_bottom = 100.0
+size_flags_horizontal = 3
+custom_fonts/font = ExtResource( 8 )
+text = "No"
+
+[node name="MarginContainer3" type="MarginContainer" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer/HBoxContainer"]
+margin_left = 476.0
+margin_right = 486.0
+margin_bottom = 100.0
+rect_min_size = Vector2( 10, 0 )
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer"]
+margin_top = 342.0
+margin_right = 486.0
+margin_bottom = 352.0
+rect_min_size = Vector2( 0, 10 )
+
+[node name="Tween" type="Tween" parent="."]
+
 [connection signal="any_gesture" from="touch_input" to="." method="_on_touch_input_any_gesture"]
 [connection signal="pressed" from="CanvasLayer/Control/disconnect_button" to="." method="_on_disconnect_button_pressed"]
+[connection signal="toggled" from="CanvasLayer/Control/bottom_menu/HBoxContainer/expand_map_button" to="." method="_on_expand_map_button_toggled"]
+[connection signal="toggled" from="CanvasLayer/Control/bottom_menu/HBoxContainer/autoplay_button" to="." method="_on_autoplay_button_toggled"]
+[connection signal="pressed" from="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer/HBoxContainer/yes" to="." method="_on_yes_pressed"]
+[connection signal="pressed" from="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer/HBoxContainer/no" to="." method="_on_no_pressed"]

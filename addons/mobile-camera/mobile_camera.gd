@@ -37,6 +37,8 @@ func _process(delta):
 		
 	position += velocity * delta * 1250
 	
+func parsing_input(event):
+	_unhandled_input(event)
 	
 func _unhandled_input(event):
 	if !enable:

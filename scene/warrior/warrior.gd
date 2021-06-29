@@ -6,10 +6,37 @@ const RANGE_ATTACK = 80.0
 var HIT_POINT = 10.0
 var ATTACK_DMG = 1.0
 var ATTACK_ACCURACY = 0.5
+var MINIMAP_MARKER = "troop"
+
+
+const dead_sound = [
+	preload("res://assets/sound/maledeath1.wav"),
+	preload("res://assets/sound/maledeath2.wav"),
+	preload("res://assets/sound/maledeath3.wav"),
+	preload("res://assets/sound/maledeath4.wav"),
+]
+const combats_sound = [
+	preload("res://assets/sound/fight1.wav"),
+	preload("res://assets/sound/fight2.wav"),
+	preload("res://assets/sound/stab2.wav"),
+	preload("res://assets/sound/stab2.wav"),
+	preload("res://assets/sound/fight3.wav"),
+	preload("res://assets/sound/stab1.wav"),
+	preload("res://assets/sound/fight4.wav"),
+	preload("res://assets/sound/stab1.wav"),
+	preload("res://assets/sound/fight5.wav"),
+	preload("res://assets/sound/stab1.wav"),
+	preload("res://assets/sound/stab2.wav"),
+]
+const stabs_sound = [
+	preload("res://assets/sound/stab1.wav"),
+	preload("res://assets/sound/stab2.wav"),
+]
 
 signal on_click(warrior)
 signal on_ready(warrior)
-signal on_dead(warrior, killed_by)
+signal on_attacked(warrior, attack_by_node_name)
+signal on_dead(warrior, killed_by_player_name)
 
 onready var _rng = RandomNumberGenerator.new()
 onready var _label = $Node2D/Label
@@ -24,11 +51,14 @@ onready var _tween = $Tween
 onready var _spawn_time = $spawn_time
 onready var _hitpoint = $Node2D/hitpoint
 onready var _hit_delay = $hit_delay
+onready var _audio = $AudioStreamPlayer2D
+onready var _highlight = $Node2D/highlight
 
 var is_alive = true
 var target : KinematicBody2D = null
 var camera = null # nodePath
 var rally_point = null # vector2
+var _killed_by = ""
 
 var _velocity = Vector2.ZERO
 var _state = IDLE
@@ -44,10 +74,11 @@ var data = {}
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	set_physics_process(false)
+	_highlight.visible = false
 	make_ready()
 	
 func make_ready():
-	set_physics_process(false)
 	
 	if camera:
 		_remote_transform.remote_path = camera
@@ -59,6 +90,8 @@ func make_ready():
 	_label.text = data.name
 	_label.self_modulate = label_color
 	
+	rally_point = null
+	target = null
 	_hitpoint.value = HIT_POINT
 
 	_idle_timer.wait_time = 1.0
@@ -69,6 +102,7 @@ func move_to(_pos: Vector2):
 		return
 		
 	rally_point = _pos
+	target = null
 	rpc("_holsted")
 	set_process(true)
 	
@@ -80,6 +114,9 @@ func attack_target(_target : KinematicBody2D):
 	target = _target
 	set_process(true)
 	
+func highlight():
+	_highlight.visible = true
+
 func _check_facing_direction(_direction) -> int:
 	if _direction.x > 0:
 		return 1
@@ -102,22 +139,35 @@ remotesync func _holsted():
 func _on_attack_execute():
 	if is_network_master() and is_instance_valid(target):
 		if _rng.randf() < ATTACK_ACCURACY:
-			target.rpc("hit", ATTACK_DMG, data.name)
+			target.rpc("hit", ATTACK_DMG, name, data.name)
 
-remotesync func hit(_dmg, _by):
+remotesync func hit(_dmg, _node_name ,_by):
 	HIT_POINT -= _dmg
 	_hitpoint.value = HIT_POINT
+	_play_stab_sound()
+	
+	emit_signal("on_attacked", self, _node_name)
+	
 	_body.modulate = Color.red
 	_hit_delay.start()
 	
 	if HIT_POINT < 0.0:
 		rpc("die", _by)
+		
+
 	
-remotesync func die(_killed_by):
+remotesync func die(_by):
+	_killed_by = _by
 	is_alive = false
+	_play_dead_sound()
+	_animation.play("die")
+	
+	
+func _on_dead():
 	visible = false
 	emit_signal("on_dead", self, _killed_by)
-
+	
+	
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
 	if is_network_master():
@@ -129,11 +179,9 @@ func _master_move(_delta):
 	var distance_to_target = 0.0
 	
 	if not is_alive:
-		_state = IDLE
-		_animation.play("idle")
 		rpc("_holsted")
 		target = null
-		set_process(false)
+		return
 	
 	if rally_point:
 		var direction = (rally_point - global_position).normalized()
@@ -203,6 +251,9 @@ func _master_move(_delta):
 		
 		
 func puppet_update(_delta):
+	if not is_alive:
+		return
+		
 	_body.scale.x = _puppet_facing_direction
 	if not _tween.is_active():
 		move_and_slide(_puppet_velocity)
@@ -251,8 +302,43 @@ remotesync func spawn():
 	_hitpoint.value = HIT_POINT
 	is_alive = true
 	visible = true
+	_state = IDLE
+	_animation.play("idle")
 	emit_signal("on_ready", self)
 
 
 func _on_hit_delay_timeout():
 	_body.modulate = Color.white
+	
+	
+func _play_fighting_sound():
+	if not visible:
+		return
+		
+	_rng.randomize()
+	_audio.stream = combats_sound[_rng.randf_range(0,combats_sound.size())]
+	_audio.play()
+	
+func _play_stab_sound():
+	if not visible:
+		return
+		
+	_rng.randomize()
+	_audio.stream = stabs_sound[_rng.randf_range(0,stabs_sound.size())]
+	_audio.play()
+	
+func _play_dead_sound():
+	if not visible:
+		return
+		
+	_rng.randomize()
+	_audio.stream = dead_sound[_rng.randf_range(0,dead_sound.size())]
+	_audio.play()
+
+
+
+
+
+
+
+

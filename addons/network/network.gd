@@ -12,6 +12,7 @@ signal server_player_connected(player_network_unique_id, data)
 signal client_player_connected(player_network_unique_id, data)
 signal player_connected(player_network_unique_id)
 signal player_connected_data_receive(player_network_unique_id,data)
+signal player_connected_data_not_found(player_network_unique_id)
 signal player_disconnected(player_network_unique_id)
 signal server_disconnected()
 signal connection_closed()
@@ -98,9 +99,13 @@ func _network_peer_connected(player_network_unique_id):
 		return
 		
 	emit_signal("player_connected", player_network_unique_id)
-		
+	request_player_info(player_network_unique_id)
+	
+	
+func request_player_info(player_network_unique_id):
 	rpc_id(PLAYER_HOST_ID,'_request_player_info', get_tree().get_network_unique_id(), player_network_unique_id)
-
+	
+	
 # other client request
 # data from newly join player
 # to server
@@ -108,7 +113,10 @@ remote func _request_player_info(from_player_network_unique_id, requested_player
 	if not get_tree().is_network_server():
 		return
 	
-	var _data = players[requested_player_network_unique_id]
+	var _data = {}
+	if players.has(requested_player_network_unique_id):
+		_data = players[requested_player_network_unique_id]
+	
 	rpc_id(from_player_network_unique_id,'_receive_player_info', requested_player_network_unique_id, _data)
 	
 # other client receive
@@ -117,6 +125,10 @@ remote func _request_player_info(from_player_network_unique_id, requested_player
 # puppet for newly joined player 
 remote func _receive_player_info(player_network_unique_id, _data):
 	if get_tree().is_network_server():
+		return
+		
+	if _data.empty():
+		emit_signal("player_connected_data_not_found", player_network_unique_id)
 		return
 		
 	emit_signal("player_connected_data_receive", player_network_unique_id, _data)

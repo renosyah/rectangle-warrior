@@ -2,6 +2,7 @@ extends Node
 
 signal attack_target(target)
 
+
 const WARRIOR = preload("res://scene/warrior/warrior.tscn")
 
 onready var _rng = RandomNumberGenerator.new()
@@ -27,9 +28,10 @@ func _ready():
 	_loading.show_loading(true)
 	_control.show_control(false)
 	_deadscreen.show_deadscreen(false)
+	_control.set_minimap_camera(_camera)
 	
 func host():
-	_network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, { name = "host player" })
+	_network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, { name = Global.player_name })
 	Global.battle_setting.mobs.clear()
 	
 	var mobs_count = 10 #_rng.randf_range(1,5)
@@ -38,7 +40,7 @@ func host():
 			network_master_id = 1,
 			name = "mob-" + str(i),
 			data = {
-				name = RandomNameGenerator.generate()
+				name = RandomNameGenerator.generate() + " (Bot)"
 			}
 		})
 		
@@ -49,7 +51,7 @@ func host():
 	_terrain.generate_battlefield()
 	
 func join():
-	_network.connect_to_server(Global.battle_setting.ip, Global.battle_setting.port, { name = "client player" })
+	_network.connect_to_server(Global.battle_setting.ip, Global.battle_setting.port, { name = Global.player_name })
 	
 	for mob in Global.battle_setting.mobs:
 		 spawn_mob(mob.network_master_id, mob.name, mob.data, false)
@@ -70,7 +72,11 @@ func _on_control_disconnect():
 		
 	_network.disconnect_from_server()
 	
-	
+func _on_control_autoplay_pressed(_autoplay):
+	for child in _player_holder.get_children():
+		if child.get_network_master() == get_tree().get_network_unique_id():
+			child.make_ready()
+			return
 	
 	
 	
@@ -80,9 +86,13 @@ func _on_control_disconnect():
 func _on_network_player_connected(player_network_unique_id):
 	var _puppet_warrior = WARRIOR.instance()
 	_puppet_warrior.name = str(player_network_unique_id)
+	_puppet_warrior.visible = false
 	_puppet_warrior.set_network_master(player_network_unique_id)
 	_player_holder.add_child(_puppet_warrior)
 	
+func _on_network_player_connected_data_not_found(player_network_unique_id):
+	yield(get_tree().create_timer(1.0), "timeout")
+	_network.request_player_info(player_network_unique_id)
 	
 func _on_network_player_connected_data_receive(player_network_unique_id, data):
 	var _puppet_warrior = get_node(NodePath(str(_player_holder.get_path()) + "/" + str(player_network_unique_id))) 
@@ -91,9 +101,12 @@ func _on_network_player_connected_data_receive(player_network_unique_id, data):
 		
 	_puppet_warrior = get_node(NodePath(str(_player_holder.get_path()) + "/" + str(player_network_unique_id))) 
 	_puppet_warrior.data = data
+	_puppet_warrior.visible = true
 	_puppet_warrior.label_color = Color.red
 	_puppet_warrior.connect("on_click", self,"_on_warrior_click")
 	_puppet_warrior.make_ready()
+	
+	_control.add_minimap_object(_puppet_warrior)
 	
 func _on_warrior_click(warrior):
 	_waypoint.show_waypoint(Color.red, warrior.position)
@@ -117,17 +130,21 @@ func spawn_mob(network_master_id, _name, data, is_host_master):
 	warrior.connect("on_click", self,"_on_mob_click")
 	_mob_holder.add_child(warrior)
 	
+	_control.add_minimap_object(warrior)
+	
 	if is_host_master:
 		_on_mob_ready(warrior)
 		warrior.connect("on_ready", self, "_on_mob_ready")
+		warrior.connect("on_attacked", self, "_on_mob_attacked")
 		warrior.connect("on_dead", self, "_on_mob_dead")
 	
 func _on_mob_ready(mob):
 	mob.move_to(Vector2(_rng.randf_range(-800,800),_rng.randf_range(-800,800)))
-	if randf() < 0.10:
+	if randf() < 0.30:
 		var _targets = _player_holder.get_children() + _mob_holder.get_children()
 		var _target = _targets[rand_range(0,_targets.size())]
 		if _target == mob:
+			mob.make_ready()
 			return
 			
 		mob.attack_target(_target)
@@ -136,12 +153,19 @@ func _on_mob_click(mob):
 	_waypoint.show_waypoint(Color.red, mob.position)
 	emit_signal("attack_target", mob)
 	
+func _on_mob_attacked(mob,_node_name):
+	var _targets = _player_holder.get_children() + _mob_holder.get_children()
+	for _target in _targets:
+		if _target.name == _node_name:
+			mob.attack_target(_target)
+			return
+		
 func _on_mob_dead(mob, _killed_by):
 	mob.position = _get_random_position()
 	mob.set_spawn_time()
 	
 func _get_random_position() -> Vector2:
-	return Vector2(_rng.randf_range(-400,400),_rng.randf_range(-400,400))
+	return Vector2(_rng.randf_range(-800,800),_rng.randf_range(-800,800))
 	
 	
 	
@@ -201,22 +225,47 @@ func spawn_playable_character(player_network_unique_id, data):
 	warrior.camera = _camera.get_path()
 	warrior.set_process(false)
 	warrior.connect("on_ready", self, "_on_player_ready")
+	warrior.connect("on_attacked", self, "_on_player_attacked")
 	warrior.connect("on_dead", self, "_on_player_dead")
 	_player_holder.add_child(warrior)
+	warrior.highlight()
 	
 	_camera.set_anchor(warrior)
 	_control.connect("touch_position", warrior, "move_to")
 	connect("attack_target", warrior, "attack_target")
 	
+	_control.add_minimap_object(warrior)
+	
 	_loading_time.wait_time = 1.0
 	_loading_time.start()
 	
 func _on_player_ready(warrior):
+	_control.show_control(true)
 	_deadscreen.show_deadscreen(false)
 	
+	if _control.autoplay:
+		autoplay(warrior)
+		
+func autoplay(warrior):
+	var _targets = _player_holder.get_children() + _mob_holder.get_children()
+	var _target = _targets[rand_range(0,_targets.size())]
+	if _target == warrior:
+		warrior.make_ready()
+		return
+		
+	warrior.attack_target(_target)
+	
+func _on_player_attacked(warrior,_node_name):
+	var _targets = _player_holder.get_children() + _mob_holder.get_children()
+	for _target in _targets:
+		if _target.name == _node_name:
+			warrior.attack_target(_target)
+			return
+			
 func _on_player_dead(warrior, killed_by):
 	warrior.position = Vector2(_rng.randf_range(-400,400),_rng.randf_range(-400,400))
 	warrior.set_spawn_time()
+	_control.show_control(false)
 	_deadscreen.show_deadscreen(true, killed_by)
 	
 	
@@ -249,4 +298,10 @@ func _on_network_connection_closed():
 func _on_loading_timer_timeout():
 	_loading.show_loading(false)
 	_control.show_control(true)
+
+
+
+
+
+
 

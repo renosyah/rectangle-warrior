@@ -4,7 +4,10 @@ onready var _find_server = $CanvasLayer/find_server
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	pass
+	if OS.has_environment("USERNAME"):
+		Global.player_name = OS.get_environment("USERNAME")
+	else:
+	   Global.player_name = "Player"
 
 func _on_host_button_pressed():
 	Global.battle_setting.mode = "HOST"
