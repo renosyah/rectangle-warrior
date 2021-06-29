@@ -26,7 +26,7 @@ rect_min_size = Vector2( 20, 0 )
 
 [node name="Label" type="Label" parent="HBoxContainer"]
 margin_left = 24.0
-margin_right = 382.0
+margin_right = 432.0
 margin_bottom = 100.0
 size_flags_horizontal = 3
 size_flags_vertical = 5
@@ -35,11 +35,11 @@ text = "Server "
 valign = 1
 
 [node name="join_button" type="Button" parent="HBoxContainer"]
-margin_left = 386.0
+margin_left = 436.0
 margin_right = 586.0
 margin_bottom = 100.0
-rect_min_size = Vector2( 200, 100 )
+rect_min_size = Vector2( 150, 0 )
 custom_fonts/font = ExtResource( 2 )
-text = "Join"
+text = " Join "
 
 [connection signal="pressed" from="HBoxContainer/join_button" to="." method="_on_join_button_pressed"]

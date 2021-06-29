@@ -18,8 +18,11 @@ onready var _loading_time = $loading_timer
 onready var _loading = $loading
 onready var _deadscreen = $deadscreen
 
+var scoredata = {}
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	_rng.randomize()
 	if Global.battle_setting.mode == "HOST":
 		host()
 	elif Global.battle_setting.mode == "JOIN":
@@ -30,28 +33,44 @@ func _ready():
 	_deadscreen.show_deadscreen(false)
 	_control.set_minimap_camera(_camera)
 	
+	_control.connect("on_menu_press", self ,"_on_menu_press")
+	
 func host():
-	_network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, { name = Global.player_name })
+	var _data = {
+		id = GDUUID.v4(),
+		name = Global.player_name, 
+		html_color = Color(_rng.randf(),_rng.randf(),_rng.randf(),1.0).to_html()
+	}
+	_network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, _data)
 	Global.battle_setting.mobs.clear()
 	
 	var mobs_count = 10 #_rng.randf_range(1,5)
 	for i in mobs_count:
 		Global.battle_setting.mobs.append({
+			id = GDUUID.v4(),
 			network_master_id = 1,
 			name = "mob-" + str(i),
 			data = {
-				name = RandomNameGenerator.generate() + " (Bot)"
+				id = GDUUID.v4(),
+				name = RandomNameGenerator.generate() + " (Bot)",
+				html_color = Color(_rng.randf(),_rng.randf(),_rng.randf(),1.0).to_html()
 			}
 		})
 		
 	for mob in Global.battle_setting.mobs:
 		 spawn_mob(mob.network_master_id, mob.name, mob.data, true)
-		
+	
+	_terrain.biom = Biom.BIOMS[_rng.randf_range(0,Biom.BIOMS.size())].id
 	_terrain.create_simplex()
 	_terrain.generate_battlefield()
 	
 func join():
-	_network.connect_to_server(Global.battle_setting.ip, Global.battle_setting.port, { name = Global.player_name })
+	var _data = { 
+		id = GDUUID.v4(),
+		name = Global.player_name, 
+		html_color = Color(_rng.randf(),_rng.randf(),_rng.randf(),1.0).to_html()
+	}
+	_network.connect_to_server(Global.battle_setting.ip, Global.battle_setting.port, _data)
 	
 	for mob in Global.battle_setting.mobs:
 		 spawn_mob(mob.network_master_id, mob.name, mob.data, false)
@@ -77,7 +96,45 @@ func _on_control_autoplay_pressed(_autoplay):
 		if child.get_network_master() == get_tree().get_network_unique_id():
 			child.make_ready()
 			return
+			
+			
+func _on_menu_press():
+	if get_tree().is_network_server():
+		_control.show_scoreboard(scoredata)
+		return
+		
+	rpc_id(_network.PLAYER_HOST_ID, "_request_score_data", get_tree().get_network_unique_id())
 	
+	
+	
+	
+	
+# score data section
+func update_score(for_player : Dictionary, add_kill_count:int = 1):
+	if not scoredata.has(for_player.id):
+		scoredata[for_player.id] = {
+			name = for_player.name,
+			kill_count = add_kill_count
+		}
+		return
+		
+	scoredata[for_player.id].kill_count += add_kill_count
+	
+# client request score data section
+remote func _request_score_data(from_id):
+	if not get_tree().is_network_server():
+		return
+		
+	rpc_id(from_id,"_send_score_data", scoredata)
+	
+remote func _send_score_data(_score_data):
+	if get_tree().is_network_server():
+		return
+		
+	if _score_data.empty():
+		return
+		
+	_control.show_scoreboard(_score_data)
 	
 	
 	
@@ -160,9 +217,11 @@ func _on_mob_attacked(mob,_node_name):
 			mob.attack_target(_target)
 			return
 		
-func _on_mob_dead(mob, _killed_by):
+func _on_mob_dead(mob, killed_by):
 	mob.position = _get_random_position()
 	mob.set_spawn_time()
+	
+	update_score(killed_by)
 	
 func _get_random_position() -> Vector2:
 	return Vector2(_rng.randf_range(-800,800),_rng.randf_range(-800,800))
@@ -201,7 +260,7 @@ remote func _send_terrain_data(_terrain_data):
 func _on_network_server_player_connected(player_network_unique_id, data):
 	spawn_playable_character(player_network_unique_id, data)
 	_server_advertise.setup()
-	_server_advertise.serverInfo["name"] = OS.get_name()
+	_server_advertise.serverInfo["name"] = Global.player_name + " on " + OS.get_name()
 	_server_advertise.serverInfo["port"] = _network.DEFAULT_PORT
 	_server_advertise.serverInfo["public"] = true
 	_server_advertise.serverInfo["mobs"] = Global.battle_setting.mobs
@@ -223,6 +282,7 @@ func spawn_playable_character(player_network_unique_id, data):
 	warrior.data = data
 	warrior.label_color = Color.blue
 	warrior.camera = _camera.get_path()
+	warrior.position = _get_random_position()
 	warrior.set_process(false)
 	warrior.connect("on_ready", self, "_on_player_ready")
 	warrior.connect("on_attacked", self, "_on_player_attacked")
@@ -238,6 +298,7 @@ func spawn_playable_character(player_network_unique_id, data):
 	
 	_loading_time.wait_time = 1.0
 	_loading_time.start()
+	
 	
 func _on_player_ready(warrior):
 	_control.show_control(true)
@@ -266,8 +327,10 @@ func _on_player_dead(warrior, killed_by):
 	warrior.position = Vector2(_rng.randf_range(-400,400),_rng.randf_range(-400,400))
 	warrior.set_spawn_time()
 	_control.show_control(false)
-	_deadscreen.show_deadscreen(true, killed_by)
+	_deadscreen.show_deadscreen(true, killed_by.name)
 	
+	if get_tree().is_network_server():
+		update_score(killed_by)
 	
 	
 	

@@ -14,11 +14,11 @@ const BIOMS = [
 		"name" : "Grass Land",
 		"sprite" : "res://asset/ui/map_biom/grass_land.png"
 	},
-#	{
-#		"id" : WET_LAND,
-#		"name" : "Wet Land",
-#		"sprite" : "res://asset/ui/map_biom/wet_land.png"
-#	},
+	{
+		"id" : WET_LAND,
+		"name" : "Wet Land",
+		"sprite" : "res://asset/ui/map_biom/wet_land.png"
+	},
 	{
 		"id" : MUD_LAND,
 		"name" : "Mud Land",

@@ -8,6 +8,7 @@ var cleanUpTimer := Timer.new()
 var socketUDP := PacketPeerUDP.new()
 var listenPort := ServerAdvertiser.DEFAULT_PORT
 var knownServers = {}
+var is_listening = false
 
 # Number of seconds to wait when a server hasn't been heard from
 # before calling remove_server
@@ -25,12 +26,14 @@ func _ready():
 	
 func setup():
 	knownServers.clear()
-	
-	if socketUDP.listen(listenPort) != OK:
-		print("GameServer LAN service: Error listening on port: " + str(listenPort))
-	else:
-		print("GameServer LAN service: Listening on port: " + str(listenPort))
-	
+		
+	if not is_listening:
+		if socketUDP.listen(listenPort) != OK:
+			print("GameServer LAN service: Error listening on port: " + str(listenPort))
+		else:
+			is_listening = true
+			print("GameServer LAN service: Listening on port: " + str(listenPort))
+		
 	set_process(true)
 	
 func stop():

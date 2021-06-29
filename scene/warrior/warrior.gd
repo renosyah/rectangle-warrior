@@ -36,7 +36,7 @@ const stabs_sound = [
 signal on_click(warrior)
 signal on_ready(warrior)
 signal on_attacked(warrior, attack_by_node_name)
-signal on_dead(warrior, killed_by_player_name)
+signal on_dead(warrior, killed_by_player_data)
 
 onready var _rng = RandomNumberGenerator.new()
 onready var _label = $Node2D/Label
@@ -52,13 +52,17 @@ onready var _spawn_time = $spawn_time
 onready var _hitpoint = $Node2D/hitpoint
 onready var _hit_delay = $hit_delay
 onready var _audio = $AudioStreamPlayer2D
-onready var _highlight = $Node2D/highlight
+onready var _highlight = $highlight
+onready var _touch_detection = $Node2D/Control
+onready var _uniform = $body/YSort/Sprite/uniform
+onready var _arms = [$body/YSort/arm_left, $body/YSort/arm_right]
+onready var _legs = [$body/YSort/leg_left, $body/YSort/leg_right]
 
 var is_alive = true
 var target : KinematicBody2D = null
 var camera = null # nodePath
 var rally_point = null # vector2
-var _killed_by = ""
+var killed_by = null
 
 var _velocity = Vector2.ZERO
 var _state = IDLE
@@ -90,8 +94,17 @@ func make_ready():
 	_label.text = data.name
 	_label.self_modulate = label_color
 	
+	_uniform.self_modulate = Color(data.html_color)
+	
+	for arm in _arms:
+		arm.self_modulate = Color(data.html_color)
+	
+	for leg in _legs:
+		leg.self_modulate = Color(data.html_color)
+	
 	rally_point = null
 	target = null
+	killed_by = null
 	_hitpoint.value = HIT_POINT
 
 	_idle_timer.wait_time = 1.0
@@ -115,6 +128,7 @@ func attack_target(_target : KinematicBody2D):
 	set_process(true)
 	
 func highlight():
+	_touch_detection.visible = false
 	_highlight.visible = true
 
 func _check_facing_direction(_direction) -> int:
@@ -133,14 +147,22 @@ func puppet_position_set(_val):
 remotesync func _play_attack():
 	_upper_animation.play("swing")
 	
+	
 remotesync func _holsted():
 	_upper_animation.play("nothing")
+	
 	
 func _on_attack_execute():
 	if is_network_master() and is_instance_valid(target):
 		if _rng.randf() < ATTACK_ACCURACY:
-			target.rpc("hit", ATTACK_DMG, name, data.name)
-
+			target.rpc("hit", ATTACK_DMG, name, data)
+	
+	
+func _show_hit_effect():
+	_body.modulate = Color.red
+	_hit_delay.start()
+	
+	
 remotesync func hit(_dmg, _node_name ,_by):
 	HIT_POINT -= _dmg
 	_hitpoint.value = HIT_POINT
@@ -148,16 +170,15 @@ remotesync func hit(_dmg, _node_name ,_by):
 	
 	emit_signal("on_attacked", self, _node_name)
 	
-	_body.modulate = Color.red
-	_hit_delay.start()
+	_show_hit_effect()
 	
 	if HIT_POINT < 0.0:
 		rpc("die", _by)
 		
-
+	
 	
 remotesync func die(_by):
-	_killed_by = _by
+	killed_by = _by
 	is_alive = false
 	_play_dead_sound()
 	_animation.play("die")
@@ -165,7 +186,7 @@ remotesync func die(_by):
 	
 func _on_dead():
 	visible = false
-	emit_signal("on_dead", self, _killed_by)
+	emit_signal("on_dead", self, killed_by)
 	
 	
 # Called every frame. 'delta' is the elapsed time since the previous frame.

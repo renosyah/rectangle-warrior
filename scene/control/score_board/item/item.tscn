@@ -1,0 +1,43 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://assets/ui/fonts/montserrat_eb_32.tres" type="DynamicFont" id=1]
+[ext_resource path="res://scene/control/score_board/item/item.gd" type="Script" id=2]
+
+[node name="item" type="HBoxContainer"]
+margin_right = 600.0
+rect_min_size = Vector2( 0, 100 )
+script = ExtResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="warrior_name" type="Label" parent="."]
+margin_top = 30.0
+margin_right = 282.0
+margin_bottom = 70.0
+size_flags_horizontal = 3
+custom_fonts/font = ExtResource( 1 )
+text = "a"
+align = 1
+valign = 1
+
+[node name="buffer_text" type="Label" parent="."]
+margin_left = 286.0
+margin_top = 30.0
+margin_right = 313.0
+margin_bottom = 70.0
+custom_fonts/font = ExtResource( 1 )
+text = " : "
+align = 1
+valign = 1
+
+[node name="kill_count" type="Label" parent="."]
+margin_left = 317.0
+margin_top = 30.0
+margin_right = 600.0
+margin_bottom = 70.0
+size_flags_horizontal = 3
+custom_fonts/font = ExtResource( 1 )
+text = "1"
+align = 1
+valign = 1

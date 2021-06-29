@@ -1,9 +1,26 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://assets/ui/fonts/montserrat_eb_48.tres" type="DynamicFont" id=1]
 [ext_resource path="res://assets/ui/fonts/montserrat_eb_32.tres" type="DynamicFont" id=2]
 [ext_resource path="res://scene/menu/find_server/find_server.gd" type="Script" id=3]
 [ext_resource path="res://addons/LANServerBroadcast/server_listener/ServerListener.gd" type="Script" id=4]
+[ext_resource path="res://assets/ui/icons/back.png" type="Texture" id=5]
+
+[sub_resource type="Animation" id=1]
+resource_name = "loading"
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("Label:text")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3, 0.4, 0.9 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ "Find Server...", "Find Server", "Find Server.", "Find Server..", "Find Server...", "Find Server..." ]
+}
 
 [node name="find_server" type="Control"]
 anchor_right = 1.0
@@ -34,23 +51,57 @@ __meta__ = {
 
 [node name="PanelContainer" type="PanelContainer" parent="PanelContainer/VBoxContainer"]
 margin_right = 586.0
-margin_bottom = 114.0
+margin_bottom = 120.0
 
-[node name="Label" type="Label" parent="PanelContainer/VBoxContainer/PanelContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/VBoxContainer/PanelContainer"]
 margin_left = 7.0
 margin_top = 7.0
 margin_right = 579.0
-margin_bottom = 107.0
+margin_bottom = 113.0
+
+[node name="close_button" type="Button" parent="PanelContainer/VBoxContainer/PanelContainer/HBoxContainer"]
+margin_right = 112.0
+margin_bottom = 106.0
 rect_min_size = Vector2( 0, 100 )
+custom_fonts/font = ExtResource( 1 )
+icon = ExtResource( 5 )
+
+[node name="Label" type="Label" parent="PanelContainer/VBoxContainer/PanelContainer/HBoxContainer"]
+margin_left = 116.0
+margin_top = 3.0
+margin_right = 456.0
+margin_bottom = 103.0
+rect_min_size = Vector2( 0, 100 )
+size_flags_horizontal = 3
 custom_fonts/font = ExtResource( 2 )
 text = "Find Server"
 align = 1
 valign = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer/VBoxContainer"]
-margin_top = 118.0
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/VBoxContainer/PanelContainer/HBoxContainer"]
+margin_left = 460.0
+margin_right = 572.0
+margin_bottom = 106.0
+rect_min_size = Vector2( 112, 0 )
+
+[node name="Label" type="Label" parent="PanelContainer/VBoxContainer"]
+margin_top = 124.0
 margin_right = 586.0
-margin_bottom = 906.0
+margin_bottom = 503.0
+size_flags_vertical = 7
+custom_fonts/font = ExtResource( 2 )
+text = "Find Server..."
+align = 1
+valign = 1
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="PanelContainer/VBoxContainer"]
+autoplay = "loading"
+anims/loading = SubResource( 1 )
+
+[node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer/VBoxContainer"]
+margin_top = 507.0
+margin_right = 586.0
+margin_bottom = 886.0
 size_flags_vertical = 3
 scroll_horizontal_enabled = false
 
@@ -58,14 +109,18 @@ scroll_horizontal_enabled = false
 margin_right = 586.0
 size_flags_horizontal = 3
 
-[node name="close_button" type="Button" parent="PanelContainer/VBoxContainer"]
-margin_top = 910.0
+[node name="host_button" type="Button" parent="PanelContainer/VBoxContainer"]
+margin_top = 890.0
 margin_right = 586.0
 margin_bottom = 1010.0
-rect_min_size = Vector2( 0, 100 )
+rect_min_size = Vector2( 0, 120 )
 custom_fonts/font = ExtResource( 1 )
-text = "Close"
+text = "Host Game"
+__meta__ = {
+"_editor_description_": ""
+}
 
 [connection signal="new_server" from="ServerListener" to="." method="_on_ServerListener_new_server"]
 [connection signal="remove_server" from="ServerListener" to="." method="_on_ServerListener_remove_server"]
-[connection signal="pressed" from="PanelContainer/VBoxContainer/close_button" to="." method="_on_close_button_pressed"]
+[connection signal="pressed" from="PanelContainer/VBoxContainer/PanelContainer/HBoxContainer/close_button" to="." method="_on_close_button_pressed"]
+[connection signal="pressed" from="PanelContainer/VBoxContainer/host_button" to="." method="_on_host_button_pressed"]

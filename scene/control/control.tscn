@@ -1,14 +1,15 @@
-[gd_scene load_steps=10 format=2]
+[gd_scene load_steps=11 format=2]
 
 [ext_resource path="res://addons/Godot-Touch-Input-Manager/InputManager.gd" type="Script" id=1]
 [ext_resource path="res://scene/control/control.gd" type="Script" id=2]
 [ext_resource path="res://assets/ui/mini_map/MiniMap.tscn" type="PackedScene" id=3]
 [ext_resource path="res://assets/ui/fonts/montserrat_eb_16.tres" type="DynamicFont" id=4]
 [ext_resource path="res://assets/ui/icons/auto_play_start.png" type="Texture" id=5]
-[ext_resource path="res://assets/ui/icons/close.png" type="Texture" id=6]
+[ext_resource path="res://assets/ui/icons/menu.png" type="Texture" id=6]
 [ext_resource path="res://assets/ui/icons/map.png" type="Texture" id=7]
 [ext_resource path="res://assets/ui/fonts/montserrat_eb_48.tres" type="DynamicFont" id=8]
 [ext_resource path="res://assets/ui/fonts/montserrat_eb_32.tres" type="DynamicFont" id=9]
+[ext_resource path="res://scene/control/score_board/score_board.tscn" type="PackedScene" id=10]
 
 [node name="control" type="Node2D"]
 script = ExtResource( 2 )
@@ -26,9 +27,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="MiniMap" parent="CanvasLayer/Control" instance=ExtResource( 3 )]
-
-[node name="disconnect_button" type="Button" parent="CanvasLayer/Control"]
+[node name="menu_button" type="Button" parent="CanvasLayer/Control"]
 anchor_left = 1.0
 anchor_right = 1.0
 margin_left = -80.0
@@ -40,6 +39,8 @@ expand_icon = true
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="MiniMap" parent="CanvasLayer/Control" instance=ExtResource( 3 )]
 
 [node name="bottom_menu" type="VBoxContainer" parent="CanvasLayer/Control"]
 anchor_top = 1.0
@@ -101,7 +102,11 @@ margin_right = 600.0
 margin_bottom = 128.0
 rect_min_size = Vector2( 0, 10 )
 
+[node name="score_board" parent="CanvasLayer/Control" instance=ExtResource( 10 )]
+visible = false
+
 [node name="disconect_dialog_confirm" type="PanelContainer" parent="CanvasLayer/Control"]
+visible = false
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -195,8 +200,9 @@ rect_min_size = Vector2( 0, 10 )
 [node name="Tween" type="Tween" parent="."]
 
 [connection signal="any_gesture" from="touch_input" to="." method="_on_touch_input_any_gesture"]
-[connection signal="pressed" from="CanvasLayer/Control/disconnect_button" to="." method="_on_disconnect_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/Control/menu_button" to="." method="_on_menu_button_pressed"]
 [connection signal="toggled" from="CanvasLayer/Control/bottom_menu/HBoxContainer/expand_map_button" to="." method="_on_expand_map_button_toggled"]
 [connection signal="toggled" from="CanvasLayer/Control/bottom_menu/HBoxContainer/autoplay_button" to="." method="_on_autoplay_button_toggled"]
+[connection signal="disconnect" from="CanvasLayer/Control/score_board" to="." method="_on_score_board_disconnect"]
 [connection signal="pressed" from="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer/HBoxContainer/yes" to="." method="_on_yes_pressed"]
 [connection signal="pressed" from="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer/HBoxContainer/no" to="." method="_on_no_pressed"]
