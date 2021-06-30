@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=2]
+[gd_scene load_steps=8 format=2]
 
 [ext_resource path="res://addons/network/network.gd" type="Script" id=1]
 [ext_resource path="res://scene/battle/battle.gd" type="Script" id=2]
@@ -7,8 +7,6 @@
 [ext_resource path="res://assets/ui/waypoint/waypoint.tscn" type="PackedScene" id=5]
 [ext_resource path="res://assets/terrain/terrain.tscn" type="PackedScene" id=6]
 [ext_resource path="res://addons/LANServerBroadcast/server_advertiser/ServerAdvertiser.gd" type="Script" id=7]
-[ext_resource path="res://assets/loading/loading.tscn" type="PackedScene" id=8]
-[ext_resource path="res://assets/deadscreen/deadscreen.tscn" type="PackedScene" id=9]
 
 [node name="battle" type="Node"]
 script = ExtResource( 2 )
@@ -16,6 +14,8 @@ script = ExtResource( 2 )
 [node name="terrain" parent="." instance=ExtResource( 6 )]
 
 [node name="waypoint" parent="." instance=ExtResource( 5 )]
+
+[node name="bush_holder" type="Node2D" parent="."]
 
 [node name="mob_holder" type="Node" parent="."]
 
@@ -38,10 +38,6 @@ one_shot = true
 
 [node name="control" parent="." instance=ExtResource( 3 )]
 
-[node name="deadscreen" parent="." instance=ExtResource( 9 )]
-
-[node name="loading" parent="." instance=ExtResource( 8 )]
-
 [connection signal="client_player_connected" from="network" to="." method="_on_network_client_player_connected"]
 [connection signal="connection_closed" from="network" to="." method="_on_network_connection_closed"]
 [connection signal="error" from="network" to="." method="_on_network_error"]
@@ -55,4 +51,5 @@ one_shot = true
 [connection signal="timeout" from="loading_timer" to="." method="_on_loading_timer_timeout"]
 [connection signal="autoplay_pressed" from="control" to="." method="_on_control_autoplay_pressed"]
 [connection signal="disconnect" from="control" to="." method="_on_control_disconnect"]
+[connection signal="on_menu_press" from="control" to="." method="_on_control_on_menu_press"]
 [connection signal="touch_position" from="control" to="." method="_on_control_touch_position"]

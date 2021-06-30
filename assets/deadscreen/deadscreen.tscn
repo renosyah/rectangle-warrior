@@ -4,12 +4,15 @@
 [ext_resource path="res://assets/ui/fonts/montserrat_eb_32.tres" type="DynamicFont" id=2]
 [ext_resource path="res://assets/ui/fonts/montserrat_eb_86.tres" type="DynamicFont" id=3]
 
-[node name="deadscreen" type="Node2D"]
+[node name="deadscreen" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
 script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
-
-[node name="bg" type="ColorRect" parent="CanvasLayer"]
+[node name="bg" type="ColorRect" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color( 0.117647, 0.117647, 0.117647, 1 )
@@ -17,20 +20,20 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="CenterContainer" type="CenterContainer" parent="CanvasLayer"]
+[node name="CenterContainer" type="CenterContainer" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/CenterContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
 margin_left = 71.0
 margin_top = 437.0
 margin_right = 528.0
 margin_bottom = 587.0
 
-[node name="message" type="Label" parent="CanvasLayer/CenterContainer/VBoxContainer"]
+[node name="message" type="Label" parent="CenterContainer/VBoxContainer"]
 margin_right = 457.0
 margin_bottom = 106.0
 custom_fonts/font = ExtResource( 3 )
@@ -41,7 +44,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="killedby" type="Label" parent="CanvasLayer/CenterContainer/VBoxContainer"]
+[node name="killedby" type="Label" parent="CenterContainer/VBoxContainer"]
 margin_top = 110.0
 margin_right = 457.0
 margin_bottom = 150.0

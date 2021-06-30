@@ -9,6 +9,7 @@ signal on_create()
 onready var _item_container = $PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer
 onready var _server_listener = $ServerListener
 onready var _find_server_label = $PanelContainer/VBoxContainer/Label
+onready var _server_list_scroll = $PanelContainer/VBoxContainer/ScrollContainer
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -16,10 +17,12 @@ func _ready():
 	
 func start_finding():
 	_find_server_label.visible = true
+	_server_list_scroll.visible = false
 	_server_listener.setup()
 	
 func stop_finding():
 	_find_server_label.visible = false
+	_server_list_scroll.visible = true
 	_server_listener.stop()
 	
 func _on_close_button_pressed():
@@ -32,6 +35,7 @@ func _join(info):
 	
 func _on_ServerListener_new_server(serverInfo):
 	_find_server_label.visible = false
+	_server_list_scroll.visible = true
 	var item = ITEM.instance()
 	item.info = serverInfo.duplicate()
 	item.connect("join", self, "_join")
@@ -40,6 +44,7 @@ func _on_ServerListener_new_server(serverInfo):
 	
 func _on_ServerListener_remove_server(serverIp):
 	_find_server_label.visible = _item_container.get_children().empty()
+	_server_list_scroll.visible = not _item_container.get_children().empty()
 	for child in _item_container.get_children():
 		if child.info["ip"] == serverIp:
 			_item_container.remove_child(child)

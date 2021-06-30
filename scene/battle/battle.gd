@@ -10,14 +10,13 @@ onready var _terrain = $terrain
 onready var _waypoint = $waypoint
 onready var _player_holder = $player_holder
 onready var _mob_holder = $mob_holder
+onready var _bush_holder = $bush_holder
 onready var _tree_holder = $tree_holder
 onready var _network = $network
 onready var _server_advertise = $ServerAdvertiser
-onready var _control = $control
-onready var _camera = $Camera2D
 onready var _loading_time = $loading_timer
-onready var _loading = $loading
-onready var _deadscreen = $deadscreen
+onready var _camera = $Camera2D
+onready var _control = $control
 
 var scoredata = {}
 
@@ -29,12 +28,10 @@ func _ready():
 	elif Global.battle_setting.mode == "JOIN":
 		join()
 		 
-	_loading.show_loading(true)
+	
 	_control.show_control(false)
-	_deadscreen.show_deadscreen(false)
 	_control.set_minimap_camera(_camera)
 	
-	_control.connect("on_menu_press", self ,"_on_menu_press")
 	
 func host():
 	var _data = {
@@ -54,7 +51,7 @@ func host():
 	
 	for enviroment in _terrain.enviroments:
 		if enviroment.type == "bush":
-			_terrain.spawn_bush(_tree_holder,enviroment.texture_asset,enviroment.position)
+			_terrain.spawn_bush(_bush_holder,enviroment.texture_asset,enviroment.position)
 		elif enviroment.type == "tree":
 			_terrain.spawn_tree(_tree_holder,enviroment.texture_asset,enviroment.position)
 		
@@ -94,7 +91,7 @@ func _on_control_autoplay_pressed(_autoplay):
 			return
 			
 			
-func _on_menu_press():
+func _on_control_on_menu_press():
 	if get_tree().is_network_server():
 		_control.show_scoreboard(scoredata)
 		return
@@ -273,7 +270,7 @@ remote func _send_terrain_data(_terrain_data):
 	
 	for enviroment in _terrain_data.enviroments:
 		if enviroment.type == "bush":
-			_terrain.spawn_bush(_tree_holder,enviroment.texture_asset,enviroment.position)
+			_terrain.spawn_bush(_bush_holder,enviroment.texture_asset,enviroment.position)
 		elif enviroment.type == "tree":
 			_terrain.spawn_tree(_tree_holder,enviroment.texture_asset,enviroment.position)
 		
@@ -326,8 +323,7 @@ func spawn_playable_character(player_network_unique_id, data):
 	_loading_time.start()
 	
 func _on_player_respawn(_warrior):
-	_control.show_control(true)
-	_deadscreen.show_deadscreen(false)
+	_control.show_deadscreen(false)
 	
 func _on_player_ready(warrior):
 	if _control.autoplay:
@@ -352,8 +348,7 @@ func _on_player_attacked(warrior,_node_name):
 func _on_player_dead(warrior, killed_by):
 	warrior.position = Vector2(_rng.randf_range(-400,400),_rng.randf_range(-400,400))
 	warrior.set_spawn_time()
-	_control.show_control(false)
-	_deadscreen.show_deadscreen(true, killed_by.name)
+	_control.show_deadscreen(true, killed_by.name)
 	
 	if get_tree().is_network_server():
 		update_score(killed_by)
@@ -385,7 +380,10 @@ func _on_network_connection_closed():
 	_on_network_server_disconnected()
 	
 func _on_loading_timer_timeout():
-	_loading.show_loading(false)
+	_control.show_loading(false)
 	_control.show_control(true)
+
+
+
 
 

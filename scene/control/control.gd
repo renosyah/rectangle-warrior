@@ -14,7 +14,8 @@ onready var _expand_map_button_icon = $CanvasLayer/Control/bottom_menu/HBoxConta
 onready var _disconnect_dialog = $CanvasLayer/Control/disconect_dialog_confirm
 onready var _tween = $Tween
 onready var _score_board = $CanvasLayer/Control/score_board
-
+onready var _loading = $CanvasLayer/loading
+onready var _deadscreen = $CanvasLayer/Control/deadscreen
 
 var _minimap_fix_position : Vector2
 var autoplay = false
@@ -23,9 +24,17 @@ var autoplay = false
 func _ready():
 	_autoplay_label.text = "Autoplay : off"
 	_disconnect_dialog.visible = false
+	_loading.show_loading(true)
+	_deadscreen.show_deadscreen(false)
 	
 func show_control(_is_show : bool):
 	_control_ui.visible = _is_show
+	
+func show_loading(_is_show : bool):
+	_loading.show_loading(_is_show)
+	
+func show_deadscreen(_is_show : bool, _killed_by : String = ""):
+	_deadscreen.show_deadscreen(_is_show, _killed_by)
 	
 func set_interface_color(_color):
 	_minimap.set_minimap_border_color(_color)

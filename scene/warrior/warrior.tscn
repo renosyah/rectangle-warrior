@@ -21,8 +21,8 @@
 [ext_resource path="res://scene/warrior/shadow.png" type="Texture" id=19]
 
 [sub_resource type="CapsuleShape2D" id=1]
-radius = 13.4343
-height = 21.7197
+radius = 9.58475
+height = 19.4994
 
 [node name="warrior" type="KinematicBody2D"]
 script = ExtResource( 3 )

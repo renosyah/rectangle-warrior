@@ -34,30 +34,29 @@ __meta__ = {
 [node name="ServerListener" type="Node" parent="."]
 script = ExtResource( 4 )
 
-[node name="PanelContainer" type="PanelContainer" parent="."]
+[node name="PanelContainer" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color( 0.156863, 0.156863, 0.156863, 0.882353 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
 anchor_right = 1.0
 anchor_bottom = 1.0
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
-margin_left = 7.0
-margin_top = 7.0
-margin_right = 593.0
-margin_bottom = 1017.0
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
 [node name="PanelContainer" type="PanelContainer" parent="PanelContainer/VBoxContainer"]
-margin_right = 586.0
+margin_right = 600.0
 margin_bottom = 114.0
 
 [node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/VBoxContainer/PanelContainer"]
 margin_left = 7.0
 margin_top = 7.0
-margin_right = 579.0
+margin_right = 593.0
 margin_bottom = 107.0
 
 [node name="close_button" type="Button" parent="PanelContainer/VBoxContainer/PanelContainer/HBoxContainer"]
@@ -70,7 +69,7 @@ expand_icon = true
 
 [node name="Label" type="Label" parent="PanelContainer/VBoxContainer/PanelContainer/HBoxContainer"]
 margin_left = 84.0
-margin_right = 488.0
+margin_right = 502.0
 margin_bottom = 100.0
 rect_min_size = Vector2( 0, 100 )
 size_flags_horizontal = 3
@@ -80,8 +79,8 @@ align = 1
 valign = 1
 
 [node name="host_button" type="Button" parent="PanelContainer/VBoxContainer/PanelContainer/HBoxContainer"]
-margin_left = 492.0
-margin_right = 572.0
+margin_left = 506.0
+margin_right = 586.0
 margin_bottom = 100.0
 rect_min_size = Vector2( 80, 100 )
 custom_fonts/font = ExtResource( 1 )
@@ -93,8 +92,8 @@ __meta__ = {
 
 [node name="Label" type="Label" parent="PanelContainer/VBoxContainer"]
 margin_top = 118.0
-margin_right = 586.0
-margin_bottom = 562.0
+margin_right = 600.0
+margin_bottom = 569.0
 size_flags_vertical = 7
 custom_fonts/font = ExtResource( 2 )
 text = "Find Server..."
@@ -106,14 +105,14 @@ autoplay = "loading"
 anims/loading = SubResource( 1 )
 
 [node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer/VBoxContainer"]
-margin_top = 566.0
-margin_right = 586.0
-margin_bottom = 1010.0
+margin_top = 573.0
+margin_right = 600.0
+margin_bottom = 1024.0
 size_flags_vertical = 3
 scroll_horizontal_enabled = false
 
 [node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/VBoxContainer/ScrollContainer"]
-margin_right = 586.0
+margin_right = 600.0
 size_flags_horizontal = 3
 
 [connection signal="new_server" from="ServerListener" to="." method="_on_ServerListener_new_server"]
