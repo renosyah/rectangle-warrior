@@ -10,6 +10,7 @@ onready var _terrain = $terrain
 onready var _waypoint = $waypoint
 onready var _player_holder = $player_holder
 onready var _mob_holder = $mob_holder
+onready var _tree_holder = $tree_holder
 onready var _network = $network
 onready var _server_advertise = $ServerAdvertiser
 onready var _control = $control
@@ -39,36 +40,31 @@ func host():
 	var _data = {
 		id = GDUUID.v4(),
 		name = Global.player_name, 
-		html_color = Color(_rng.randf(),_rng.randf(),_rng.randf(),1.0).to_html()
+		html_color = Global.html_color
 	}
 	_network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, _data)
-	Global.battle_setting.mobs.clear()
 	
-	var mobs_count = 10 #_rng.randf_range(1,5)
-	for i in mobs_count:
-		Global.battle_setting.mobs.append({
-			id = GDUUID.v4(),
-			network_master_id = 1,
-			name = "mob-" + str(i),
-			data = {
-				id = GDUUID.v4(),
-				name = RandomNameGenerator.generate() + " (Bot)",
-				html_color = Color(_rng.randf(),_rng.randf(),_rng.randf(),1.0).to_html()
-			}
-		})
-		
 	for mob in Global.battle_setting.mobs:
 		 spawn_mob(mob.network_master_id, mob.name, mob.data, true)
 	
 	_terrain.biom = Biom.BIOMS[_rng.randf_range(0,Biom.BIOMS.size())].id
 	_terrain.create_simplex()
+	_terrain.setup_enviroment()
 	_terrain.generate_battlefield()
+	
+	for enviroment in _terrain.enviroments:
+		if enviroment.type == "bush":
+			_terrain.spawn_bush(_tree_holder,enviroment.texture_asset,enviroment.position)
+		elif enviroment.type == "tree":
+			_terrain.spawn_tree(_tree_holder,enviroment.texture_asset,enviroment.position)
+		
+	
 	
 func join():
 	var _data = { 
 		id = GDUUID.v4(),
 		name = Global.player_name, 
-		html_color = Color(_rng.randf(),_rng.randf(),_rng.randf(),1.0).to_html()
+		html_color = Global.html_color
 	}
 	_network.connect_to_server(Global.battle_setting.ip, Global.battle_setting.port, _data)
 	
@@ -104,6 +100,25 @@ func _on_menu_press():
 		return
 		
 	rpc_id(_network.PLAYER_HOST_ID, "_request_score_data", get_tree().get_network_unique_id())
+	
+	
+	
+	
+	
+# camera callback handler section
+func _on_Camera2D_on_camera_moving(_pos, _zoom):
+	var _transparacy =  _zoom.x
+
+	if _transparacy > 0.6:
+		_transparacy = 1.0
+	elif _transparacy < 0.0:
+		_transparacy = 0.4
+		
+	_tree_holder.modulate.a = _transparacy
+	
+	
+	
+	
 	
 	
 	
@@ -160,18 +175,19 @@ func _on_network_player_connected_data_receive(player_network_unique_id, data):
 	_puppet_warrior.data = data
 	_puppet_warrior.visible = true
 	_puppet_warrior.label_color = Color.red
-	_puppet_warrior.connect("on_click", self,"_on_warrior_click")
+	_puppet_warrior.connect("on_click", self,"_on_puppet_warrior_click")
+	_puppet_warrior.connect("on_dead", self, "_on_puppet_warrior_dead")
 	_puppet_warrior.make_ready()
 	
 	_control.add_minimap_object(_puppet_warrior)
 	
-func _on_warrior_click(warrior):
+func _on_puppet_warrior_click(warrior):
 	_waypoint.show_waypoint(Color.red, warrior.position)
 	emit_signal("attack_target", warrior)
 	
-	
-	
-	
+func _on_puppet_warrior_dead(warrior, killed_by):
+	if get_tree().is_network_server():
+		update_score(killed_by)
 	
 	
 	
@@ -237,6 +253,7 @@ remote func _request_terrain_data(from_id):
 		biom = _terrain.biom,
 		simplex_seed = _terrain.simplex_seed,
 		size = _terrain.tile_size,
+		enviroments = _terrain.enviroments,
 	}
 		
 	rpc_id(from_id,"_send_terrain_data", _terrain_data)
@@ -251,14 +268,20 @@ remote func _send_terrain_data(_terrain_data):
 	_terrain.biom = _terrain_data.biom
 	_terrain.simplex_seed = _terrain_data.simplex_seed
 	_terrain.tile_size = _terrain_data.size
+	_terrain.enviroments = _terrain_data.enviroments
 	_terrain.generate_battlefield()
 	
-	
-	
+	for enviroment in _terrain_data.enviroments:
+		if enviroment.type == "bush":
+			_terrain.spawn_bush(_tree_holder,enviroment.texture_asset,enviroment.position)
+		elif enviroment.type == "tree":
+			_terrain.spawn_tree(_tree_holder,enviroment.texture_asset,enviroment.position)
+		
 	
 # player connection as host/client section
 func _on_network_server_player_connected(player_network_unique_id, data):
 	spawn_playable_character(player_network_unique_id, data)
+	_control.set_interface_color(Color(data.html_color))
 	_server_advertise.setup()
 	_server_advertise.serverInfo["name"] = Global.player_name + " on " + OS.get_name()
 	_server_advertise.serverInfo["port"] = _network.DEFAULT_PORT
@@ -268,7 +291,9 @@ func _on_network_server_player_connected(player_network_unique_id, data):
 	
 func _on_network_client_player_connected(player_network_unique_id, data):
 	spawn_playable_character(player_network_unique_id, data)
+	_control.set_interface_color(Color(data.html_color))
 	rpc_id(_network.PLAYER_HOST_ID,"_request_terrain_data",player_network_unique_id)
+	
 	
 	
 	
@@ -285,6 +310,7 @@ func spawn_playable_character(player_network_unique_id, data):
 	warrior.position = _get_random_position()
 	warrior.set_process(false)
 	warrior.connect("on_ready", self, "_on_player_ready")
+	warrior.connect("on_respawn", self, "_on_player_respawn")
 	warrior.connect("on_attacked", self, "_on_player_attacked")
 	warrior.connect("on_dead", self, "_on_player_dead")
 	_player_holder.add_child(warrior)
@@ -299,14 +325,14 @@ func spawn_playable_character(player_network_unique_id, data):
 	_loading_time.wait_time = 1.0
 	_loading_time.start()
 	
-	
-func _on_player_ready(warrior):
+func _on_player_respawn(_warrior):
 	_control.show_control(true)
 	_deadscreen.show_deadscreen(false)
 	
+func _on_player_ready(warrior):
 	if _control.autoplay:
 		autoplay(warrior)
-		
+	
 func autoplay(warrior):
 	var _targets = _player_holder.get_children() + _mob_holder.get_children()
 	var _target = _targets[rand_range(0,_targets.size())]
@@ -361,10 +387,5 @@ func _on_network_connection_closed():
 func _on_loading_timer_timeout():
 	_loading.show_loading(false)
 	_control.show_control(true)
-
-
-
-
-
 
 

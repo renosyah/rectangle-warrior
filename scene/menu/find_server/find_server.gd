@@ -46,7 +46,6 @@ func _on_ServerListener_remove_server(serverIp):
 			return
 			
 func _on_host_button_pressed():
-	stop_finding()
 	emit_signal("on_create")
 	
 	

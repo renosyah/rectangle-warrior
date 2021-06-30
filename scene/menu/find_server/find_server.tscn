@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=8 format=2]
 
 [ext_resource path="res://assets/ui/fonts/montserrat_eb_48.tres" type="DynamicFont" id=1]
 [ext_resource path="res://assets/ui/fonts/montserrat_eb_32.tres" type="DynamicFont" id=2]
 [ext_resource path="res://scene/menu/find_server/find_server.gd" type="Script" id=3]
 [ext_resource path="res://addons/LANServerBroadcast/server_listener/ServerListener.gd" type="Script" id=4]
 [ext_resource path="res://assets/ui/icons/back.png" type="Texture" id=5]
+[ext_resource path="res://assets/ui/icons/host.png" type="Texture" id=6]
 
 [sub_resource type="Animation" id=1]
 resource_name = "loading"
@@ -51,26 +52,26 @@ __meta__ = {
 
 [node name="PanelContainer" type="PanelContainer" parent="PanelContainer/VBoxContainer"]
 margin_right = 586.0
-margin_bottom = 120.0
+margin_bottom = 114.0
 
 [node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/VBoxContainer/PanelContainer"]
 margin_left = 7.0
 margin_top = 7.0
 margin_right = 579.0
-margin_bottom = 113.0
+margin_bottom = 107.0
 
 [node name="close_button" type="Button" parent="PanelContainer/VBoxContainer/PanelContainer/HBoxContainer"]
-margin_right = 112.0
-margin_bottom = 106.0
-rect_min_size = Vector2( 0, 100 )
+margin_right = 80.0
+margin_bottom = 100.0
+rect_min_size = Vector2( 80, 100 )
 custom_fonts/font = ExtResource( 1 )
 icon = ExtResource( 5 )
+expand_icon = true
 
 [node name="Label" type="Label" parent="PanelContainer/VBoxContainer/PanelContainer/HBoxContainer"]
-margin_left = 116.0
-margin_top = 3.0
-margin_right = 456.0
-margin_bottom = 103.0
+margin_left = 84.0
+margin_right = 488.0
+margin_bottom = 100.0
 rect_min_size = Vector2( 0, 100 )
 size_flags_horizontal = 3
 custom_fonts/font = ExtResource( 2 )
@@ -78,16 +79,22 @@ text = "Find Server"
 align = 1
 valign = 1
 
-[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/VBoxContainer/PanelContainer/HBoxContainer"]
-margin_left = 460.0
+[node name="host_button" type="Button" parent="PanelContainer/VBoxContainer/PanelContainer/HBoxContainer"]
+margin_left = 492.0
 margin_right = 572.0
-margin_bottom = 106.0
-rect_min_size = Vector2( 112, 0 )
+margin_bottom = 100.0
+rect_min_size = Vector2( 80, 100 )
+custom_fonts/font = ExtResource( 1 )
+icon = ExtResource( 6 )
+expand_icon = true
+__meta__ = {
+"_editor_description_": ""
+}
 
 [node name="Label" type="Label" parent="PanelContainer/VBoxContainer"]
-margin_top = 124.0
+margin_top = 118.0
 margin_right = 586.0
-margin_bottom = 503.0
+margin_bottom = 562.0
 size_flags_vertical = 7
 custom_fonts/font = ExtResource( 2 )
 text = "Find Server..."
@@ -99,9 +106,9 @@ autoplay = "loading"
 anims/loading = SubResource( 1 )
 
 [node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer/VBoxContainer"]
-margin_top = 507.0
+margin_top = 566.0
 margin_right = 586.0
-margin_bottom = 886.0
+margin_bottom = 1010.0
 size_flags_vertical = 3
 scroll_horizontal_enabled = false
 
@@ -109,18 +116,7 @@ scroll_horizontal_enabled = false
 margin_right = 586.0
 size_flags_horizontal = 3
 
-[node name="host_button" type="Button" parent="PanelContainer/VBoxContainer"]
-margin_top = 890.0
-margin_right = 586.0
-margin_bottom = 1010.0
-rect_min_size = Vector2( 0, 120 )
-custom_fonts/font = ExtResource( 1 )
-text = "Host Game"
-__meta__ = {
-"_editor_description_": ""
-}
-
 [connection signal="new_server" from="ServerListener" to="." method="_on_ServerListener_new_server"]
 [connection signal="remove_server" from="ServerListener" to="." method="_on_ServerListener_remove_server"]
 [connection signal="pressed" from="PanelContainer/VBoxContainer/PanelContainer/HBoxContainer/close_button" to="." method="_on_close_button_pressed"]
-[connection signal="pressed" from="PanelContainer/VBoxContainer/host_button" to="." method="_on_host_button_pressed"]
+[connection signal="pressed" from="PanelContainer/VBoxContainer/PanelContainer/HBoxContainer/host_button" to="." method="_on_host_button_pressed"]

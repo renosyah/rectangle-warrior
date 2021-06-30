@@ -8,21 +8,30 @@ signal disconnect
 onready var _control_ui = $CanvasLayer/Control
 onready var _touch_input = $touch_input
 onready var _minimap = $CanvasLayer/Control/MiniMap
-onready var _autoplay_button = $CanvasLayer/Control/bottom_menu/HBoxContainer/autoplay_button
+onready var _autoplay_label = $CanvasLayer/Control/bottom_menu/HBoxContainer/auto_play_label
+onready var _autoplay_button_icon = $CanvasLayer/Control/bottom_menu/HBoxContainer/autoplay_button/TextureRect
+onready var _expand_map_button_icon = $CanvasLayer/Control/bottom_menu/HBoxContainer/expand_map_button/TextureRect
 onready var _disconnect_dialog = $CanvasLayer/Control/disconect_dialog_confirm
 onready var _tween = $Tween
 onready var _score_board = $CanvasLayer/Control/score_board
+
 
 var _minimap_fix_position : Vector2
 var autoplay = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	_autoplay_label.text = "Autoplay : off"
 	_disconnect_dialog.visible = false
 	
 func show_control(_is_show : bool):
 	_control_ui.visible = _is_show
-
+	
+func set_interface_color(_color):
+	_minimap.set_minimap_border_color(_color)
+	_autoplay_button_icon.self_modulate = _color
+	_expand_map_button_icon.self_modulate = _color
+	
 func set_minimap_camera(camera):
 	_minimap.set_camera(camera)
 
@@ -85,10 +94,15 @@ func _on_no_pressed():
 	
 	
 func _on_autoplay_button_toggled(button_pressed):
-	_autoplay_button.icon = preload("res://assets/ui/icons/auto_play_start.png")
-	if button_pressed:
-		_autoplay_button.icon = preload("res://assets/ui/icons/auto_play_stop.png")
+	var _icn = preload("res://assets/ui/icons/auto_play_start.png")
+	_autoplay_label.text = "Autoplay : off"
 		
+	if button_pressed:
+		_autoplay_label.text = "Autoplay : on"
+		_icn = preload("res://assets/ui/icons/auto_play_stop.png")
+		
+	_autoplay_button_icon.texture = _icn
+	
 	autoplay = button_pressed
 	emit_signal("autoplay_pressed", autoplay)
 	

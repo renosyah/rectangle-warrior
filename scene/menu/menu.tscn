@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://scene/menu/menu.gd" type="Script" id=1]
 [ext_resource path="res://assets/ui/fonts/montserrat_eb_48.tres" type="DynamicFont" id=2]
 [ext_resource path="res://scene/menu/find_server/find_server.tscn" type="PackedScene" id=3]
 [ext_resource path="res://scene/menu/play.png" type="Texture" id=4]
 [ext_resource path="res://scene/menu/input_name/input_name.tscn" type="PackedScene" id=5]
+[ext_resource path="res://scene/menu/host_setting/host_setting.tscn" type="PackedScene" id=6]
 
 [node name="menu" type="Node"]
 script = ExtResource( 1 )
@@ -75,9 +76,14 @@ visible = false
 [node name="input_name" parent="CanvasLayer" instance=ExtResource( 5 )]
 visible = false
 
+[node name="host_setting" parent="CanvasLayer" instance=ExtResource( 6 )]
+visible = false
+
 [connection signal="pressed" from="CanvasLayer/CenterContainer/HBoxContainer/VBoxContainer/find_button" to="." method="_on_find_button_pressed"]
 [connection signal="on_close" from="CanvasLayer/find_server" to="." method="_on_find_server_on_close"]
 [connection signal="on_create" from="CanvasLayer/find_server" to="." method="_on_find_server_on_create"]
 [connection signal="on_join" from="CanvasLayer/find_server" to="." method="_on_find_server_on_join"]
 [connection signal="on_close" from="CanvasLayer/input_name" to="." method="_on_input_name_on_close"]
 [connection signal="on_continue" from="CanvasLayer/input_name" to="." method="_on_input_name_on_continue"]
+[connection signal="close" from="CanvasLayer/host_setting" to="." method="_on_host_setting_close"]
+[connection signal="create" from="CanvasLayer/host_setting" to="." method="_on_host_setting_create"]

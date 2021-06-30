@@ -7,7 +7,7 @@ var HIT_POINT = 10.0
 var ATTACK_DMG = 1.0
 var ATTACK_ACCURACY = 0.5
 var MINIMAP_MARKER = "troop"
-
+var MINIMAP_COLOR = Color.white
 
 const dead_sound = [
 	preload("res://assets/sound/maledeath1.wav"),
@@ -35,6 +35,7 @@ const stabs_sound = [
 
 signal on_click(warrior)
 signal on_ready(warrior)
+signal on_respawn(warrior)
 signal on_attacked(warrior, attack_by_node_name)
 signal on_dead(warrior, killed_by_player_data)
 
@@ -95,6 +96,7 @@ func make_ready():
 	_label.self_modulate = label_color
 	
 	_uniform.self_modulate = Color(data.html_color)
+	MINIMAP_COLOR = Color(data.html_color)
 	
 	for arm in _arms:
 		arm.self_modulate = Color(data.html_color)
@@ -325,7 +327,11 @@ remotesync func spawn():
 	visible = true
 	_state = IDLE
 	_animation.play("idle")
-	emit_signal("on_ready", self)
+	
+	emit_signal("on_respawn", self)
+	
+	_idle_timer.wait_time = _rng.randf_range(1,2)
+	_idle_timer.start()
 
 
 func _on_hit_delay_timeout():

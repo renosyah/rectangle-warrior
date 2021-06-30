@@ -81,8 +81,22 @@ margin_right = 10.0
 margin_bottom = 100.0
 rect_min_size = Vector2( 10, 0 )
 
-[node name="input_name" type="LineEdit" parent="disconect_dialog_confirm/VBoxContainer/HBoxContainer2"]
+[node name="choose_color" type="Button" parent="disconect_dialog_confirm/VBoxContainer/HBoxContainer2"]
 margin_left = 14.0
+margin_right = 114.0
+margin_bottom = 100.0
+rect_min_size = Vector2( 100, 0 )
+
+[node name="ColorRect" type="ColorRect" parent="disconect_dialog_confirm/VBoxContainer/HBoxContainer2/choose_color"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="input_name" type="LineEdit" parent="disconect_dialog_confirm/VBoxContainer/HBoxContainer2"]
+margin_left = 118.0
 margin_right = 472.0
 margin_bottom = 100.0
 rect_min_size = Vector2( 0, 100 )
@@ -136,5 +150,6 @@ margin_bottom = 366.0
 rect_min_size = Vector2( 0, 10 )
 
 [connection signal="pressed" from="disconect_dialog_confirm/VBoxContainer/HBoxContainer3/button_close" to="." method="_on_button_close_pressed"]
+[connection signal="pressed" from="disconect_dialog_confirm/VBoxContainer/HBoxContainer2/choose_color" to="." method="_on_choose_color_pressed"]
 [connection signal="text_changed" from="disconect_dialog_confirm/VBoxContainer/HBoxContainer2/input_name" to="." method="_on_input_name_text_changed"]
 [connection signal="pressed" from="disconect_dialog_confirm/VBoxContainer/HBoxContainer/continue" to="." method="_on_continue_pressed"]

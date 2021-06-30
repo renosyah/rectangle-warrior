@@ -5,6 +5,7 @@ onready var rng = RandomNumberGenerator.new()
 var biom = Biom.GRASS_LAND
 var tile_size = Vector2(100.0,100.0)
 var simplex_seed = 0.0
+var enviroments = []
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -91,12 +92,63 @@ func _get_tile_index(_biom, _noice_sample):
 				
 	return Biom.TILE_ID.grass
 
-func spawn_tree(pos):
+func spawn_tree(parent,texture_asset, pos):
 	var tree = preload("res://assets/terrain/tree/tree.tscn").instance()
 	tree.position = pos
-	add_child(tree)
+	tree.texture_asset = texture_asset
+	parent.add_child(tree)
 	
-func spawn_bush(pos):
+func spawn_bush(parent,texture_asset, pos):
 	var tree = preload("res://assets/terrain/bush/bush.tscn").instance()
 	tree.position = pos
-	add_child(tree)
+	tree.texture_asset = texture_asset
+	parent.add_child(tree)
+
+
+const TREE_SPRITE_PATH = [
+	"res://assets/terrain/tree/tree1.png",
+	"res://assets/terrain/tree/tree2.png",
+	"res://assets/terrain/tree/tree3.png",
+	"res://assets/terrain/tree/tree4.png",
+	"res://assets/terrain/tree/tree5.png"
+]
+
+const BUSH_SPRITE_PATH = [
+	"res://assets/terrain/bush/bush1.png",
+	"res://assets/terrain/bush/bush2.png",
+	"res://assets/terrain/bush/bush3.png",
+	"res://assets/terrain/bush/bush4.png",
+]
+
+
+func setup_enviroment():
+	enviroments.clear()
+	for _x in range(-10,10):
+		for _y in range(-10,10):
+			rng.randomize()
+			if rng.randf() < 0.11:
+				var x = _x *150
+				var y = _y *150
+				enviroments.append({
+					type = "bush",
+					position = Vector2(x,y),
+					texture_asset = BUSH_SPRITE_PATH[rng.randf_range(0,BUSH_SPRITE_PATH.size())]
+				})
+				
+	for _x in range(-10,10):
+		for _y in range(-10,10):
+			rng.randomize()
+			if rng.randf() < 0.15:
+				var x = _x *150
+				var y = _y *150
+				var pos = Vector2(x,y)
+				enviroments.append({
+					type = "tree",
+					position = Vector2(x,y),
+					texture_asset = TREE_SPRITE_PATH[rng.randf_range(0,TREE_SPRITE_PATH.size())]
+				})
+				
+	
+
+
+

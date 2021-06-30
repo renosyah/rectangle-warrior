@@ -93,7 +93,7 @@ func add_object(object):
 	grid.add_child(new_marker)
 	grid.move_child(new_marker, 0)
 	new_marker.show()
-	new_marker.self_modulate = Color(object.data.html_color)
+	new_marker.self_modulate = Color(object.MINIMAP_COLOR)
 	markers[object] = new_marker
 		
 		
