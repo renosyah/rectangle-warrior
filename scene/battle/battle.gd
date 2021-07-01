@@ -32,6 +32,12 @@ func _ready():
 	_control.set_minimap_camera(_camera)
 	
 	
+	
+	
+	
+	
+	
+# if game running as host
 func host():
 	var _data = {
 		id = Global.player_id,
@@ -55,9 +61,8 @@ func host():
 			_terrain.spawn_bush(_bush_holder,enviroment.texture_asset,enviroment.position)
 		elif enviroment.type == "tree":
 			_terrain.spawn_tree(_tree_holder,enviroment.texture_asset,enviroment.position)
-		
 	
-	
+# if game running as client
 func join():
 	var _data = { 
 		id = Global.player_id,
@@ -68,6 +73,9 @@ func join():
 	
 	for mob in Global.battle_setting.bots:
 		spawn_mob(mob.network_master_id, mob.name, mob.data, false)
+	
+	
+	
 	
 	
 	
@@ -88,13 +96,14 @@ func _on_control_autoplay_pressed(_autoplay):
 			child.make_ready()
 			return
 			
-			
 func _on_control_on_menu_press():
 	if get_tree().is_network_server():
 		_control.show_scoreboard(scoredata)
 		return
 		
 	rpc_id(_network.PLAYER_HOST_ID, "_request_score_data", get_tree().get_network_unique_id())
+	
+	
 	
 	
 	
@@ -110,8 +119,6 @@ func _on_Camera2D_on_camera_moving(_pos, _zoom):
 		_transparacy = 0.4
 		
 	_tree_holder.modulate.a = _transparacy
-	
-	
 	
 	
 	
@@ -149,7 +156,12 @@ remote func _send_score_data(_score_data):
 	
 	
 	
+	
+	
+	
 # player puppet section
+# function _on_network_player_connected is to make sure
+# puppet is exist on all side then receive the data for puppet
 func _on_network_player_connected(player_network_unique_id):
 	var _puppet_warrior = WARRIOR.instance()
 	_puppet_warrior.name = str(player_network_unique_id)
@@ -186,6 +198,9 @@ func _on_puppet_warrior_click(warrior):
 func _on_puppet_warrior_dead(warrior, killed_by):
 	if get_tree().is_network_server():
 		update_score(killed_by, 1)
+	
+	
+	
 	
 	
 	
@@ -242,6 +257,10 @@ func _get_random_position() -> Vector2:
 	
 	
 	
+	
+	
+	
+	
 # client request terrain data section
 remote func _request_terrain_data(from_id):
 	if not get_tree().is_network_server():
@@ -274,7 +293,12 @@ remote func _send_terrain_data(_terrain_data):
 			_terrain.spawn_bush(_bush_holder,enviroment.texture_asset,enviroment.position)
 		elif enviroment.type == "tree":
 			_terrain.spawn_tree(_tree_holder,enviroment.texture_asset,enviroment.position)
-		
+	
+	
+	
+	
+	
+	
 	
 # player connection as host/client section
 func _on_network_server_player_connected(player_network_unique_id, data):
@@ -291,6 +315,7 @@ func _on_network_client_player_connected(player_network_unique_id, data):
 	spawn_playable_character(player_network_unique_id, data)
 	_control.set_interface_color(Color(data.html_color))
 	rpc_id(_network.PLAYER_HOST_ID,"_request_terrain_data",player_network_unique_id)
+	
 	
 	
 	
@@ -356,6 +381,10 @@ func _on_player_dead(warrior, killed_by):
 	
 	
 	
+	
+	
+	
+	
 # network event section
 func to_main_menu():
 	for child in _warrior_holder.get_children():
@@ -381,6 +410,12 @@ func _on_network_error(err):
 func _on_network_connection_closed():
 	to_main_menu()
 	
+	
+	
+	
+	
+	
+# on loading finish
 func _on_loading_timer_timeout():
 	_control.show_loading(false)
 	_control.show_control(true)
