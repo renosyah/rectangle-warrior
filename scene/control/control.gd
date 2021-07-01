@@ -20,6 +20,7 @@ onready var _deadscreen = $CanvasLayer/Control/deadscreen
 var _minimap_fix_position : Vector2
 var autoplay = false
 
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	_autoplay_label.text = "Autoplay : off"
@@ -89,6 +90,7 @@ func _unhandled_input(event):
 	_touch_input.check_input(event)
 	
 func _on_menu_button_pressed():
+	show_scoreboard({})
 	emit_signal("on_menu_press")
 	
 func _on_score_board_disconnect():

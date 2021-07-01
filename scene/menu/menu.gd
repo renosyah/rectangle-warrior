@@ -7,9 +7,14 @@ onready var _main_menu = $CanvasLayer/main_menu
 onready var _find_server = $CanvasLayer/find_server
 onready var _dialog_input_name = $CanvasLayer/input_name
 onready var _host_setting = $CanvasLayer/host_setting
+onready var _error_dialog = $CanvasLayer/error_dialog
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	if Global.network_error != "":
+		_error_dialog.show_message(Global.network_error)
+		_error_dialog.visible = true
+		
 	_terrain.biom = Biom.BIOMS[_rng.randf_range(0,Biom.BIOMS.size())].id
 	_terrain.create_simplex()
 	_terrain.setup_enviroment()
@@ -40,7 +45,7 @@ func _on_find_server_on_join(info):
 	Global.battle_setting.mode = "JOIN"
 	Global.battle_setting.ip = info["ip"]
 	Global.battle_setting.port = info["port"]
-	Global.battle_setting.mobs = info["mobs"]
+	Global.battle_setting.bots = info["bots"]
 	
 	get_tree().change_scene("res://scene/battle/battle.tscn")
 	
@@ -62,14 +67,15 @@ func _on_input_name_on_close():
 	
 func _on_host_setting_create(_bots):
 	Global.battle_setting.mode = "HOST"
-	Global.battle_setting.mobs = _bots
+	Global.battle_setting.bots = _bots
 	
 	get_tree().change_scene("res://scene/battle/battle.tscn")
 	
 	
 func _on_host_setting_close():
 	_host_setting.visible = false
-
-
-
-
+	
+	
+func _on_error_dialog_on_close():
+	Global.network_error = ""
+	_error_dialog.visible = false

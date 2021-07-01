@@ -6,8 +6,8 @@
 
 [node name="item" type="PanelContainer"]
 margin_right = 600.0
-margin_bottom = 114.0
-rect_min_size = Vector2( 0, 100 )
+margin_bottom = 140.0
+rect_min_size = Vector2( 0, 140 )
 script = ExtResource( 3 )
 __meta__ = {
 "_edit_use_anchors_": false
@@ -17,27 +17,28 @@ __meta__ = {
 margin_left = 7.0
 margin_top = 7.0
 margin_right = 593.0
-margin_bottom = 107.0
+margin_bottom = 133.0
 
 [node name="MarginContainer" type="MarginContainer" parent="HBoxContainer"]
 margin_right = 20.0
-margin_bottom = 100.0
+margin_bottom = 126.0
 rect_min_size = Vector2( 20, 0 )
 
 [node name="Label" type="Label" parent="HBoxContainer"]
 margin_left = 24.0
 margin_right = 432.0
-margin_bottom = 100.0
+margin_bottom = 126.0
 size_flags_horizontal = 3
 size_flags_vertical = 5
 custom_fonts/font = ExtResource( 1 )
-text = "Server "
+text = "server"
 valign = 1
+autowrap = true
 
 [node name="join_button" type="Button" parent="HBoxContainer"]
 margin_left = 436.0
 margin_right = 586.0
-margin_bottom = 100.0
+margin_bottom = 126.0
 rect_min_size = Vector2( 150, 0 )
 custom_fonts/font = ExtResource( 2 )
 text = " Join "

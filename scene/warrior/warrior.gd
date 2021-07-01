@@ -72,7 +72,7 @@ var _facing_direction = 1
 puppet var _puppet_position = position setget puppet_position_set
 puppet var _puppet_state = IDLE
 puppet var _puppet_facing_direction = 1
-puppet var _puppet_velocity = Vector2.ZERO
+puppet var _puppet_velocity = Vector2.ZERO setget puppet_velocity_set
 
 var label_color = Color.white
 var data = {}
@@ -132,7 +132,7 @@ func attack_target(_target : KinematicBody2D):
 func highlight():
 	_touch_detection.visible = false
 	_highlight.visible = true
-
+	
 func _check_facing_direction(_direction) -> int:
 	if _direction.x > 0:
 		return 1
@@ -144,7 +144,9 @@ func puppet_position_set(_val):
 	_tween.interpolate_property(self,"position", position, _puppet_position, 0.1)
 	_tween.start()
 	
-	
+func puppet_velocity_set(_val):
+	_puppet_velocity = _val
+	_velocity = _puppet_velocity
 	
 remotesync func _play_attack():
 	_upper_animation.play("swing")
@@ -279,7 +281,7 @@ func puppet_update(_delta):
 		
 	_body.scale.x = _puppet_facing_direction
 	if not _tween.is_active():
-		move_and_slide(_puppet_velocity)
+		move_and_slide(_velocity)
 		
 	match _puppet_state:
 		IDLE:

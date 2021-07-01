@@ -8,8 +8,7 @@ const WARRIOR = preload("res://scene/warrior/warrior.tscn")
 onready var _rng = RandomNumberGenerator.new()
 onready var _terrain = $terrain
 onready var _waypoint = $waypoint
-onready var _player_holder = $player_holder
-onready var _mob_holder = $mob_holder
+onready var _warrior_holder = $warrior_holder
 onready var _bush_holder = $bush_holder
 onready var _tree_holder = $tree_holder
 onready var _network = $network
@@ -35,14 +34,16 @@ func _ready():
 	
 func host():
 	var _data = {
-		id = GDUUID.v4(),
+		id = Global.player_id,
 		name = Global.player_name, 
 		html_color = Global.html_color
 	}
 	_network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, _data)
+	update_score(_data, 0)
 	
-	for mob in Global.battle_setting.mobs:
-		 spawn_mob(mob.network_master_id, mob.name, mob.data, true)
+	for mob in Global.battle_setting.bots:
+		update_score(mob.data, 0)
+		spawn_mob(mob.network_master_id, mob.name, mob.data, true)
 	
 	_terrain.biom = Biom.BIOMS[_rng.randf_range(0,Biom.BIOMS.size())].id
 	_terrain.create_simplex()
@@ -59,14 +60,14 @@ func host():
 	
 func join():
 	var _data = { 
-		id = GDUUID.v4(),
+		id = Global.player_id,
 		name = Global.player_name, 
 		html_color = Global.html_color
 	}
 	_network.connect_to_server(Global.battle_setting.ip, Global.battle_setting.port, _data)
 	
-	for mob in Global.battle_setting.mobs:
-		 spawn_mob(mob.network_master_id, mob.name, mob.data, false)
+	for mob in Global.battle_setting.bots:
+		spawn_mob(mob.network_master_id, mob.name, mob.data, false)
 	
 	
 	
@@ -76,16 +77,13 @@ func _on_control_touch_position(pos):
 	_waypoint.show_waypoint(Color.white, pos)
 	
 func _on_control_disconnect():
-	for child in _player_holder.get_children():
-		child.set_process(false)
-		
-	for child in _mob_holder.get_children():
+	for child in _warrior_holder.get_children():
 		child.set_process(false)
 		
 	_network.disconnect_from_server()
 	
 func _on_control_autoplay_pressed(_autoplay):
-	for child in _player_holder.get_children():
+	for child in _warrior_holder.get_children():
 		if child.get_network_master() == get_tree().get_network_unique_id():
 			child.make_ready()
 			return
@@ -122,7 +120,7 @@ func _on_Camera2D_on_camera_moving(_pos, _zoom):
 	
 	
 # score data section
-func update_score(for_player : Dictionary, add_kill_count:int = 1):
+func update_score(for_player : Dictionary, add_kill_count:int = 0):
 	if not scoredata.has(for_player.id):
 		scoredata[for_player.id] = {
 			name = for_player.name,
@@ -157,18 +155,21 @@ func _on_network_player_connected(player_network_unique_id):
 	_puppet_warrior.name = str(player_network_unique_id)
 	_puppet_warrior.visible = false
 	_puppet_warrior.set_network_master(player_network_unique_id)
-	_player_holder.add_child(_puppet_warrior)
+	_warrior_holder.add_child(_puppet_warrior)
 	
 func _on_network_player_connected_data_not_found(player_network_unique_id):
 	yield(get_tree().create_timer(1.0), "timeout")
 	_network.request_player_info(player_network_unique_id)
 	
 func _on_network_player_connected_data_receive(player_network_unique_id, data):
-	var _puppet_warrior = get_node(NodePath(str(_player_holder.get_path()) + "/" + str(player_network_unique_id))) 
+	var _puppet_warrior = get_node(NodePath(str(_warrior_holder.get_path()) + "/" + str(player_network_unique_id))) 
 	if not is_instance_valid(_puppet_warrior):
 		return
 		
-	_puppet_warrior = get_node(NodePath(str(_player_holder.get_path()) + "/" + str(player_network_unique_id))) 
+	if get_tree().is_network_server():
+		update_score(data, 0)
+		
+	_puppet_warrior = get_node(NodePath(str(_warrior_holder.get_path()) + "/" + str(player_network_unique_id))) 
 	_puppet_warrior.data = data
 	_puppet_warrior.visible = true
 	_puppet_warrior.label_color = Color.red
@@ -184,7 +185,7 @@ func _on_puppet_warrior_click(warrior):
 	
 func _on_puppet_warrior_dead(warrior, killed_by):
 	if get_tree().is_network_server():
-		update_score(killed_by)
+		update_score(killed_by, 1)
 	
 	
 	
@@ -198,7 +199,7 @@ func spawn_mob(network_master_id, _name, data, is_host_master):
 	warrior.position = _get_random_position()
 	warrior.set_network_master(network_master_id)
 	warrior.connect("on_click", self,"_on_mob_click")
-	_mob_holder.add_child(warrior)
+	_warrior_holder.add_child(warrior)
 	
 	_control.add_minimap_object(warrior)
 	
@@ -211,7 +212,7 @@ func spawn_mob(network_master_id, _name, data, is_host_master):
 func _on_mob_ready(mob):
 	mob.move_to(Vector2(_rng.randf_range(-800,800),_rng.randf_range(-800,800)))
 	if randf() < 0.30:
-		var _targets = _player_holder.get_children() + _mob_holder.get_children()
+		var _targets = _warrior_holder.get_children()
 		var _target = _targets[rand_range(0,_targets.size())]
 		if _target == mob:
 			mob.make_ready()
@@ -224,7 +225,7 @@ func _on_mob_click(mob):
 	emit_signal("attack_target", mob)
 	
 func _on_mob_attacked(mob,_node_name):
-	var _targets = _player_holder.get_children() + _mob_holder.get_children()
+	var _targets = _warrior_holder.get_children()
 	for _target in _targets:
 		if _target.name == _node_name:
 			mob.attack_target(_target)
@@ -234,7 +235,7 @@ func _on_mob_dead(mob, killed_by):
 	mob.position = _get_random_position()
 	mob.set_spawn_time()
 	
-	update_score(killed_by)
+	update_score(killed_by, 1)
 	
 func _get_random_position() -> Vector2:
 	return Vector2(_rng.randf_range(-800,800),_rng.randf_range(-800,800))
@@ -283,7 +284,7 @@ func _on_network_server_player_connected(player_network_unique_id, data):
 	_server_advertise.serverInfo["name"] = Global.player_name + " on " + OS.get_name()
 	_server_advertise.serverInfo["port"] = _network.DEFAULT_PORT
 	_server_advertise.serverInfo["public"] = true
-	_server_advertise.serverInfo["mobs"] = Global.battle_setting.mobs
+	_server_advertise.serverInfo["bots"] = Global.battle_setting.bots
 	
 	
 func _on_network_client_player_connected(player_network_unique_id, data):
@@ -310,7 +311,7 @@ func spawn_playable_character(player_network_unique_id, data):
 	warrior.connect("on_respawn", self, "_on_player_respawn")
 	warrior.connect("on_attacked", self, "_on_player_attacked")
 	warrior.connect("on_dead", self, "_on_player_dead")
-	_player_holder.add_child(warrior)
+	_warrior_holder.add_child(warrior)
 	warrior.highlight()
 	
 	_camera.set_anchor(warrior)
@@ -330,7 +331,7 @@ func _on_player_ready(warrior):
 		autoplay(warrior)
 	
 func autoplay(warrior):
-	var _targets = _player_holder.get_children() + _mob_holder.get_children()
+	var _targets = _warrior_holder.get_children()
 	var _target = _targets[rand_range(0,_targets.size())]
 	if _target == warrior:
 		warrior.make_ready()
@@ -339,7 +340,7 @@ func autoplay(warrior):
 	warrior.attack_target(_target)
 	
 func _on_player_attacked(warrior,_node_name):
-	var _targets = _player_holder.get_children() + _mob_holder.get_children()
+	var _targets = _warrior_holder.get_children()
 	for _target in _targets:
 		if _target.name == _node_name:
 			warrior.attack_target(_target)
@@ -351,33 +352,34 @@ func _on_player_dead(warrior, killed_by):
 	_control.show_deadscreen(true, killed_by.name)
 	
 	if get_tree().is_network_server():
-		update_score(killed_by)
+		update_score(killed_by, 1)
 	
 	
 	
 # network event section
+func to_main_menu():
+	for child in _warrior_holder.get_children():
+		child.set_process(false)
+		child.queue_free()
+		
+	get_tree().change_scene("res://scene/menu/menu.tscn")
+	
+	
 func _on_network_player_disconnected(player_network_unique_id):
-	for child in _player_holder.get_children():
+	for child in _warrior_holder.get_children():
 		if child.get_network_master() == player_network_unique_id:
 			child.set_process(false)
 			child.queue_free()
 	
 func _on_network_server_disconnected():
-	for child in _player_holder.get_children():
-		child.set_process(false)
-		child.queue_free()
-		
-	for child in _mob_holder.get_children():
-		child.set_process(false)
-		child.queue_free()
-			
-	get_tree().change_scene("res://scene/menu/menu.tscn")
+	Global.network_error = "Disconnected from server!"
+	to_main_menu()
 	
 func _on_network_error(err):
-	print(err)
+	Global.network_error = str(err)
 	
 func _on_network_connection_closed():
-	_on_network_server_disconnected()
+	to_main_menu()
 	
 func _on_loading_timer_timeout():
 	_control.show_loading(false)

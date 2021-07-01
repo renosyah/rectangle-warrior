@@ -4,9 +4,9 @@ signal on_close()
 signal on_continue(_player_name, html_color)
 
 onready var _rng = RandomNumberGenerator.new()
-onready var _input_color_button_color = $disconect_dialog_confirm/VBoxContainer/HBoxContainer2/choose_color/ColorRect
-onready var _ready_button = $disconect_dialog_confirm/VBoxContainer/HBoxContainer/continue
-onready var _input_name = $disconect_dialog_confirm/VBoxContainer/HBoxContainer2/input_name
+onready var _input_color_button_color = $Panel/VBoxContainer/HBoxContainer2/choose_color/ColorRect
+onready var _ready_button = $Panel/VBoxContainer/HBoxContainer/continue
+onready var _input_name = $Panel/VBoxContainer/HBoxContainer2/input_name
 
 var player_name = ""
 var html_color = ""

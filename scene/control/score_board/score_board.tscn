@@ -1,9 +1,25 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://assets/ui/fonts/montserrat_eb_48.tres" type="DynamicFont" id=1]
 [ext_resource path="res://assets/ui/fonts/montserrat_eb_32.tres" type="DynamicFont" id=2]
-[ext_resource path="res://assets/ui/icons/close.png" type="Texture" id=3]
+[ext_resource path="res://assets/ui/icons/back.png" type="Texture" id=3]
 [ext_resource path="res://scene/control/score_board/score_board.gd" type="Script" id=4]
+
+[sub_resource type="Animation" id=1]
+resource_name = "loading"
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("Label:text")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3, 0.4, 0.9 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ "...", "", ".", "..", "...", "..." ]
+}
 
 [node name="score_board" type="Control"]
 anchor_right = 1.0
@@ -16,69 +32,84 @@ __meta__ = {
 [node name="ColorRect" type="ColorRect" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color( 0, 0, 0, 0.603922 )
+color = Color( 0, 0, 0, 0.866667 )
 __meta__ = {
 "_edit_use_anchors_": false,
 "_editor_description_": ""
 }
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="CenterContainer" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Panel" type="Control" parent="CenterContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+rect_min_size = Vector2( 500, 600 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/Panel"]
 anchor_right = 1.0
 anchor_bottom = 1.0
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Panel" type="PanelContainer" parent="CenterContainer"]
-margin_left = 50.0
-margin_top = 212.0
-margin_right = 550.0
-margin_bottom = 812.0
-rect_min_size = Vector2( 500, 600 )
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer/Panel/VBoxContainer"]
+margin_right = 600.0
+margin_bottom = 150.0
+rect_min_size = Vector2( 0, 150 )
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/Panel"]
+[node name="HBoxContainer3" type="HBoxContainer" parent="CenterContainer/Panel/VBoxContainer/PanelContainer"]
 margin_left = 7.0
 margin_top = 7.0
-margin_right = 493.0
-margin_bottom = 593.0
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="HBoxContainer3" type="HBoxContainer" parent="CenterContainer/Panel/VBoxContainer"]
-margin_right = 486.0
-margin_bottom = 100.0
+margin_right = 593.0
+margin_bottom = 143.0
 rect_min_size = Vector2( 0, 100 )
 
-[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel/VBoxContainer/HBoxContainer3"]
+[node name="button_close" type="Button" parent="CenterContainer/Panel/VBoxContainer/PanelContainer/HBoxContainer3"]
 margin_right = 80.0
-margin_bottom = 100.0
+margin_bottom = 136.0
 rect_min_size = Vector2( 80, 0 )
+icon = ExtResource( 3 )
+flat = true
+expand_icon = true
 
-[node name="Label" type="Label" parent="CenterContainer/Panel/VBoxContainer/HBoxContainer3"]
+[node name="Label" type="Label" parent="CenterContainer/Panel/VBoxContainer/PanelContainer/HBoxContainer3"]
 margin_left = 84.0
-margin_top = 20.0
-margin_right = 402.0
-margin_bottom = 80.0
+margin_top = 38.0
+margin_right = 502.0
+margin_bottom = 98.0
 size_flags_horizontal = 3
 custom_fonts/font = ExtResource( 1 )
 text = "Score"
 align = 1
 valign = 1
 
-[node name="button_close" type="Button" parent="CenterContainer/Panel/VBoxContainer/HBoxContainer3"]
-margin_left = 406.0
-margin_right = 486.0
-margin_bottom = 100.0
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel/VBoxContainer/PanelContainer/HBoxContainer3"]
+margin_left = 506.0
+margin_right = 586.0
+margin_bottom = 136.0
 rect_min_size = Vector2( 80, 0 )
-icon = ExtResource( 3 )
-flat = true
-expand_icon = true
+
+[node name="Label" type="Label" parent="CenterContainer/Panel/VBoxContainer"]
+margin_top = 154.0
+margin_right = 600.0
+margin_bottom = 900.0
+size_flags_vertical = 7
+custom_fonts/font = ExtResource( 2 )
+text = "..."
+align = 1
+valign = 1
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="CenterContainer/Panel/VBoxContainer"]
+autoplay = "loading"
+anims/loading = SubResource( 1 )
 
 [node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/Panel/VBoxContainer"]
-margin_top = 104.0
-margin_right = 486.0
-margin_bottom = 482.0
+visible = false
+margin_top = 529.0
+margin_right = 600.0
+margin_bottom = 900.0
 size_flags_vertical = 3
 scroll_horizontal_enabled = false
 __meta__ = {
@@ -86,17 +117,17 @@ __meta__ = {
 }
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/Panel/VBoxContainer/ScrollContainer"]
-margin_right = 486.0
+margin_right = 600.0
 size_flags_horizontal = 3
 
 [node name="disconnect_button" type="Button" parent="CenterContainer/Panel/VBoxContainer"]
-margin_top = 486.0
-margin_right = 486.0
-margin_bottom = 586.0
-rect_min_size = Vector2( 0, 100 )
+margin_top = 904.0
+margin_right = 600.0
+margin_bottom = 1024.0
+rect_min_size = Vector2( 0, 120 )
 custom_fonts/font = ExtResource( 2 )
 custom_colors/font_color = Color( 0.796078, 0, 0, 1 )
 text = "Disconnect"
 
-[connection signal="pressed" from="CenterContainer/Panel/VBoxContainer/HBoxContainer3/button_close" to="." method="_on_button_close_pressed"]
+[connection signal="pressed" from="CenterContainer/Panel/VBoxContainer/PanelContainer/HBoxContainer3/button_close" to="." method="_on_button_close_pressed"]
 [connection signal="pressed" from="CenterContainer/Panel/VBoxContainer/disconnect_button" to="." method="_on_disconnect_button_pressed"]

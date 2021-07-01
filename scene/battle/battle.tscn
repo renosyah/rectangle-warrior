@@ -17,9 +17,7 @@ script = ExtResource( 2 )
 
 [node name="bush_holder" type="Node2D" parent="."]
 
-[node name="mob_holder" type="Node" parent="."]
-
-[node name="player_holder" type="Node" parent="."]
+[node name="warrior_holder" type="YSort" parent="."]
 
 [node name="tree_holder" type="Node2D" parent="."]
 

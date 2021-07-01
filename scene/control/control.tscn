@@ -128,6 +128,7 @@ margin_bottom = 128.0
 rect_min_size = Vector2( 0, 10 )
 
 [node name="deadscreen" parent="CanvasLayer/Control" instance=ExtResource( 11 )]
+visible = false
 
 [node name="score_board" parent="CanvasLayer/Control" instance=ExtResource( 10 )]
 visible = false
@@ -225,6 +226,7 @@ margin_bottom = 352.0
 rect_min_size = Vector2( 0, 10 )
 
 [node name="loading" parent="CanvasLayer" instance=ExtResource( 12 )]
+visible = false
 
 [node name="Tween" type="Tween" parent="."]
 
