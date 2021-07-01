@@ -91,7 +91,7 @@ __meta__ = {
 sort_enabled = false
 
 [node name="arm_left" type="Sprite" parent="body/YSort"]
-position = Vector2( 10.2702, -0.514219 )
+position = Vector2( 14.9421, 2.98974 )
 texture = ExtResource( 5 )
 
 [node name="Sprite" type="Sprite" parent="body/YSort"]
@@ -110,7 +110,7 @@ position = Vector2( 0, 2.52 )
 texture = ExtResource( 10 )
 
 [node name="arm_right" type="Sprite" parent="body/YSort"]
-position = Vector2( 10.2969, 7.42194 )
+position = Vector2( 13.9219, 7.67194 )
 texture = ExtResource( 5 )
 
 [node name="weapon" type="Sprite" parent="body/YSort/arm_right"]
@@ -118,7 +118,7 @@ position = Vector2( 2.85461, -27.5665 )
 texture = ExtResource( 2 )
 
 [node name="leg_left" type="Sprite" parent="body/YSort"]
-position = Vector2( 6.72346, 26.9239 )
+position = Vector2( 6.723, 26.924 )
 texture = ExtResource( 4 )
 
 [node name="leg_right" type="Sprite" parent="body/YSort"]
