@@ -27,7 +27,6 @@ func _ready():
 	elif Global.battle_setting.mode == "JOIN":
 		join()
 		 
-	
 	_control.show_control(false)
 	_control.set_minimap_camera(_camera)
 	
@@ -61,6 +60,8 @@ func host():
 			_terrain.spawn_bush(_bush_holder,enviroment.texture_asset,enviroment.position)
 		elif enviroment.type == "tree":
 			_terrain.spawn_tree(_tree_holder,enviroment.texture_asset,enviroment.position)
+		
+	_control.update_scoreboard(scoredata)
 	
 # if game running as client
 func join():
@@ -70,57 +71,13 @@ func join():
 		to_main_menu()
 		return
 		
+	update_score(Global.player, 0)
+	
 	for mob in Global.battle_setting.bots:
+		update_score(mob.data, 0)
 		spawn_mob(mob.network_master_id, mob.name, mob.data, false)
-	
-	
-	
-	
-	
-	
-	
-# user interaction section
-func _on_control_touch_position(pos):
-	_waypoint.show_waypoint(Color.white, pos)
-	
-func _on_control_disconnect():
-	for child in _warrior_holder.get_children():
-		child.set_process(false)
 		
-	_network.disconnect_from_server()
-	
-func _on_control_autoplay_pressed(_autoplay):
-	for child in _warrior_holder.get_children():
-		if child.get_network_master() == get_tree().get_network_unique_id():
-			child.make_ready()
-			return
-			
-func _on_control_on_menu_press():
-	if get_tree().is_network_server():
-		_control.show_scoreboard(scoredata)
-		return
-		
-	rpc_id(_network.PLAYER_HOST_ID, "_request_score_data", get_tree().get_network_unique_id())
-	
-	
-	
-	
-	
-	
-	
-# camera callback handler section
-func _on_Camera2D_on_camera_moving(_pos, _zoom):
-	var _transparacy =  _zoom.x
-
-	if _transparacy > 0.6:
-		_transparacy = 1.0
-	elif _transparacy < 0.0:
-		_transparacy = 0.4
-		
-	_tree_holder.modulate.a = _transparacy
-	
-	
-	
+	_control.update_scoreboard(scoredata)
 	
 	
 	
@@ -135,77 +92,13 @@ func update_score(for_player : Dictionary, add_kill_count:int = 0):
 		return
 		
 	scoredata[for_player.id].kill_count += add_kill_count
-	
-# client request score data section
-remote func _request_score_data(from_id):
-	if not get_tree().is_network_server():
-		return
-		
-	rpc_id(from_id,"_send_score_data", scoredata)
-	
-remote func _send_score_data(_score_data):
-	if get_tree().is_network_server():
-		return
-		
-	if _score_data.empty():
-		return
-		
-	_control.show_scoreboard(_score_data)
-	
-	
-	
-	
-	
-	
-	
-# player puppet section
-# function _on_network_player_connected is to make sure
-# puppet is exist on all side then receive the data for puppet
-func _on_network_player_connected(player_network_unique_id):
-	var _puppet_warrior = WARRIOR.instance()
-	_puppet_warrior.name = str(player_network_unique_id)
-	_puppet_warrior.visible = false
-	_puppet_warrior.set_network_master(player_network_unique_id)
-	_warrior_holder.add_child(_puppet_warrior)
-	
-func _on_network_player_connected_data_not_found(player_network_unique_id):
-	yield(get_tree().create_timer(1.0), "timeout")
-	_network.request_player_info(player_network_unique_id)
-	
-func _on_network_player_connected_data_receive(player_network_unique_id, data):
-	var _puppet_warrior = get_node(NodePath(str(_warrior_holder.get_path()) + "/" + str(player_network_unique_id))) 
-	if not is_instance_valid(_puppet_warrior):
-		return
-		
-	if get_tree().is_network_server():
-		update_score(data, 0)
-		
-	_puppet_warrior = get_node(NodePath(str(_warrior_holder.get_path()) + "/" + str(player_network_unique_id))) 
-	_puppet_warrior.data = data
-	_puppet_warrior.visible = true
-	_puppet_warrior.label_color = Color.red
-	_puppet_warrior.connect("on_click", self,"_on_puppet_warrior_click")
-	_puppet_warrior.connect("on_dead", self, "_on_puppet_warrior_dead")
-	_puppet_warrior.make_ready()
-	
-	_control.add_minimap_object(_puppet_warrior)
-	
-func _on_puppet_warrior_click(warrior):
-	_waypoint.show_waypoint(Color.red, warrior.position)
-	emit_signal("attack_target", warrior)
-	
-func _on_puppet_warrior_dead(warrior, killed_by):
-	if get_tree().is_network_server():
-		update_score(killed_by, 1)
-	
-	
-	
+	rpc("update_score_display", scoredata)
 	
 	
 	
 	
 # mob section
-func spawn_mob(network_master_id, _name, data, is_host_master):
+func spawn_mob(network_master_id : int, _name : String, data : Dictionary, is_host_master : bool):
 	var warrior = WARRIOR.instance()
 	warrior.name = _name
 	warrior.data = data
@@ -223,7 +116,7 @@ func spawn_mob(network_master_id, _name, data, is_host_master):
 		warrior.connect("on_attacked", self, "_on_mob_attacked")
 		warrior.connect("on_dead", self, "_on_mob_dead")
 	
-func _on_mob_ready(mob):
+func _on_mob_ready(mob : KinematicBody2D):
 	mob.move_to(Vector2(_rng.randf_range(-800,800),_rng.randf_range(-800,800)))
 	if randf() < 0.30:
 		var _targets = _warrior_holder.get_children()
@@ -234,18 +127,18 @@ func _on_mob_ready(mob):
 			
 		mob.attack_target(_target)
 		
-func _on_mob_click(mob):
+func _on_mob_click(mob : KinematicBody2D):
 	_waypoint.show_waypoint(Color.red, mob.position)
 	emit_signal("attack_target", mob)
 	
-func _on_mob_attacked(mob,_node_name):
+func _on_mob_attacked(mob : KinematicBody2D,_node_name : String):
 	var _targets = _warrior_holder.get_children()
 	for _target in _targets:
 		if _target.name == _node_name:
 			mob.attack_target(_target)
 			return
 		
-func _on_mob_dead(mob, killed_by):
+func _on_mob_dead(mob : KinematicBody2D, killed_by : Dictionary):
 	mob.position = _get_random_position()
 	mob.set_spawn_time()
 	
@@ -258,10 +151,187 @@ func _get_random_position() -> Vector2:
 	
 	
 	
+# player playable character section
+func spawn_playable_character(player_network_unique_id : int, data : Dictionary):
+	var warrior = WARRIOR.instance()
+	warrior.name = str(player_network_unique_id)
+	warrior.set_network_master(player_network_unique_id)
+	warrior.data = data
+	warrior.label_color = Color.blue
+	warrior.camera = _camera.get_path()
+	warrior.position = _get_random_position()
+	warrior.set_process(false)
+	warrior.connect("on_ready", self, "_on_player_ready")
+	warrior.connect("on_respawn", self, "_on_player_respawn")
+	warrior.connect("on_attacked", self, "_on_player_attacked")
+	warrior.connect("on_dead", self, "_on_player_dead")
+	_warrior_holder.add_child(warrior)
+	warrior.highlight()
+	
+	_camera.set_anchor(warrior)
+	_control.connect("touch_position", warrior, "move_to")
+	connect("attack_target", warrior, "attack_target")
+	
+	_control.add_minimap_object(warrior)
+	
+	_loading_time.wait_time = 1.0
+	_loading_time.start()
+	
+func _on_player_respawn(_warrior : KinematicBody2D):
+	_control.show_deadscreen(false)
+	
+func _on_player_ready(warrior : KinematicBody2D):
+	if _control.autoplay:
+		autoplay(warrior)
+	
+func _on_player_attacked(warrior : KinematicBody2D,_node_name : String):
+	var _targets = _warrior_holder.get_children()
+	for _target in _targets:
+		if _target.name == _node_name:
+			warrior.attack_target(_target)
+			return
+			
+func _on_player_dead(warrior : KinematicBody2D, killed_by : Dictionary):
+	warrior.position = Vector2(_rng.randf_range(-400,400),_rng.randf_range(-400,400))
+	warrior.set_spawn_time()
+	_control.show_deadscreen(true, killed_by.name)
+	
+	if get_tree().is_network_server():
+		update_score(killed_by, 1)
+	
+	
+	
+	
+	
+# autoplay to make player master character
+# play by it self
+func autoplay(warrior : KinematicBody2D):
+	var _targets = _warrior_holder.get_children()
+	var _target = _targets[rand_range(0,_targets.size())]
+	if _target == warrior:
+		warrior.make_ready()
+		return
+		
+	warrior.attack_target(_target)
+	
+	
+	
+	
+	
+	
+# navigate back to main menu section
+func to_main_menu():
+	for child in _warrior_holder.get_children():
+		child.set_process(false)
+		child.queue_free()
+		
+	get_tree().change_scene("res://scene/menu/menu.tscn")
+	
+	
+	
+	
+	
+	
+	
+# user interaction section
+func _on_control_touch_position(pos : Vector2):
+	_waypoint.show_waypoint(Color.white, pos)
+	
+func _on_control_disconnect():
+	for child in _warrior_holder.get_children():
+		child.set_process(false)
+		
+	_network.disconnect_from_server()
+	
+func _on_control_autoplay_pressed(_autoplay : bool):
+	for child in _warrior_holder.get_children():
+		if child.get_network_master() == get_tree().get_network_unique_id():
+			child.make_ready()
+			return
+			
+func _on_control_on_menu_press():
+	_control.show_scoreboard()
+	
+	
+	
+	
+	
+	
+# camera callback handler section
+func _on_Camera2D_on_camera_moving(_pos : Vector2, _zoom : Vector2):
+	var _transparacy =  _zoom.x
+
+	if _transparacy > 0.6:
+		_transparacy = 1.0
+	elif _transparacy < 0.0:
+		_transparacy = 0.4
+		
+	_tree_holder.modulate.a = _transparacy
+	
+	
+	
+	
+	
+	
+	
+# update score data section
+remotesync func update_score_display(_score_data):
+	_control.update_scoreboard(_score_data)
+	
+	
+	
+	
+	
+	
+	
+# player puppet section
+# function _on_network_player_connected is to make sure
+# puppet is exist on all side then receive the data for puppet
+func _on_network_player_connected(player_network_unique_id : int):
+	var _puppet_warrior = WARRIOR.instance()
+	_puppet_warrior.name = str(player_network_unique_id)
+	_puppet_warrior.visible = false
+	_puppet_warrior.set_network_master(player_network_unique_id)
+	_warrior_holder.add_child(_puppet_warrior)
+	
+func _on_network_player_connected_data_not_found(player_network_unique_id : int):
+	yield(get_tree().create_timer(1.0), "timeout")
+	_network.request_player_info(player_network_unique_id)
+	
+func _on_network_player_connected_data_receive(player_network_unique_id : int, data : Dictionary):
+	var _puppet_warrior = get_node(NodePath(str(_warrior_holder.get_path()) + "/" + str(player_network_unique_id))) 
+	if not is_instance_valid(_puppet_warrior):
+		return
+		
+	if get_tree().is_network_server():
+		update_score(data, 0)
+		
+	_puppet_warrior = get_node(NodePath(str(_warrior_holder.get_path()) + "/" + str(player_network_unique_id))) 
+	_puppet_warrior.data = data
+	_puppet_warrior.visible = true
+	_puppet_warrior.label_color = Color.red
+	_puppet_warrior.connect("on_click", self,"_on_puppet_warrior_click")
+	_puppet_warrior.connect("on_dead", self, "_on_puppet_warrior_dead")
+	_puppet_warrior.make_ready()
+	
+	_control.add_minimap_object(_puppet_warrior)
+	
+func _on_puppet_warrior_click(warrior : KinematicBody2D):
+	_waypoint.show_waypoint(Color.red, warrior.position)
+	emit_signal("attack_target", warrior)
+	
+func _on_puppet_warrior_dead(warrior : KinematicBody2D, killed_by : Dictionary):
+	if get_tree().is_network_server():
+		update_score(killed_by, 1)
+	
+	
+	
+	
+	
 	
 	
 # client request terrain data section
-remote func _request_terrain_data(from_id):
+remote func _request_terrain_data(from_id : int):
 	if not get_tree().is_network_server():
 		return
 		
@@ -274,7 +344,7 @@ remote func _request_terrain_data(from_id):
 		
 	rpc_id(from_id,"_send_terrain_data", _terrain_data)
 	
-remote func _send_terrain_data(_terrain_data):
+remote func _send_terrain_data(_terrain_data : Dictionary):
 	if get_tree().is_network_server():
 		return
 		
@@ -300,7 +370,7 @@ remote func _send_terrain_data(_terrain_data):
 	
 	
 # player connection as host/client section
-func _on_network_server_player_connected(player_network_unique_id, data):
+func _on_network_server_player_connected(player_network_unique_id : int, data : Dictionary):
 	spawn_playable_character(player_network_unique_id, data)
 	_control.set_interface_color(Color(data.html_color))
 	_server_advertise.setup()
@@ -310,7 +380,7 @@ func _on_network_server_player_connected(player_network_unique_id, data):
 	_server_advertise.serverInfo["bots"] = Global.battle_setting.bots
 	
 	
-func _on_network_client_player_connected(player_network_unique_id, data):
+func _on_network_client_player_connected(player_network_unique_id : int, data : Dictionary):
 	spawn_playable_character(player_network_unique_id, data)
 	_control.set_interface_color(Color(data.html_color))
 	rpc_id(_network.PLAYER_HOST_ID,"_request_terrain_data",player_network_unique_id)
@@ -321,79 +391,8 @@ func _on_network_client_player_connected(player_network_unique_id, data):
 	
 	
 	
-# player playable character section
-func spawn_playable_character(player_network_unique_id, data):
-	var warrior = WARRIOR.instance()
-	warrior.name = str(player_network_unique_id)
-	warrior.set_network_master(player_network_unique_id)
-	warrior.data = data
-	warrior.label_color = Color.blue
-	warrior.camera = _camera.get_path()
-	warrior.position = _get_random_position()
-	warrior.set_process(false)
-	warrior.connect("on_ready", self, "_on_player_ready")
-	warrior.connect("on_respawn", self, "_on_player_respawn")
-	warrior.connect("on_attacked", self, "_on_player_attacked")
-	warrior.connect("on_dead", self, "_on_player_dead")
-	_warrior_holder.add_child(warrior)
-	warrior.highlight()
-	
-	_camera.set_anchor(warrior)
-	_control.connect("touch_position", warrior, "move_to")
-	connect("attack_target", warrior, "attack_target")
-	
-	_control.add_minimap_object(warrior)
-	
-	_loading_time.wait_time = 1.0
-	_loading_time.start()
-	
-func _on_player_respawn(_warrior):
-	_control.show_deadscreen(false)
-	
-func _on_player_ready(warrior):
-	if _control.autoplay:
-		autoplay(warrior)
-	
-func autoplay(warrior):
-	var _targets = _warrior_holder.get_children()
-	var _target = _targets[rand_range(0,_targets.size())]
-	if _target == warrior:
-		warrior.make_ready()
-		return
-		
-	warrior.attack_target(_target)
-	
-func _on_player_attacked(warrior,_node_name):
-	var _targets = _warrior_holder.get_children()
-	for _target in _targets:
-		if _target.name == _node_name:
-			warrior.attack_target(_target)
-			return
-			
-func _on_player_dead(warrior, killed_by):
-	warrior.position = Vector2(_rng.randf_range(-400,400),_rng.randf_range(-400,400))
-	warrior.set_spawn_time()
-	_control.show_deadscreen(true, killed_by.name)
-	
-	if get_tree().is_network_server():
-		update_score(killed_by, 1)
-	
-	
-	
-	
-	
-	
-	
 # network event section
-func to_main_menu():
-	for child in _warrior_holder.get_children():
-		child.set_process(false)
-		child.queue_free()
-		
-	get_tree().change_scene("res://scene/menu/menu.tscn")
-	
-	
-func _on_network_player_disconnected(player_network_unique_id):
+func _on_network_player_disconnected(player_network_unique_id : int):
 	for child in _warrior_holder.get_children():
 		if child.get_network_master() == player_network_unique_id:
 			child.set_process(false)

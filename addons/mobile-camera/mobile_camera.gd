@@ -3,21 +3,21 @@ class_name MobileCamera
 
 signal on_camera_moving( _pos, _zoom)
 
-var achor_is_set = false
-var center_anchor
-var max_distance_from_achor = 750.0
+var achor_is_set : bool = false
+var center_anchor : Node = null
+var max_distance_from_achor : float = 750.0
 
-var min_zoom = 0.4
-var max_zoom = 2.2
-var zoom_sensitivity = 10
-var zoom_speed = 0.05
+var min_zoom : float = 0.4
+var max_zoom : float = 2.2
+var zoom_sensitivity : float = 10.0
+var zoom_speed : float = 0.05
 
-var events = {}
-var last_drag_distance = 0
-var enable = true
-var drag_speed = 200.0
+var events : Dictionary = {}
+var last_drag_distance : float = 0.0
+var enable  : bool = true
+var drag_speed : float = 200.0
 
-func set_anchor(pos : Node, max_dis : float = 750.0):
+func set_anchor(pos : Node, max_dis : float = 750.0) -> void:
 	achor_is_set = true
 	center_anchor = pos
 	max_distance_from_achor = max_dis
@@ -37,7 +37,7 @@ func _process(delta):
 		
 	position += velocity * delta * 1250
 	
-func parsing_input(event):
+func parsing_input(event) -> void:
 	_unhandled_input(event)
 	
 func _unhandled_input(event):

@@ -7,7 +7,7 @@
 [ext_resource path="res://assets/ui/icons/auto_play_start.png" type="Texture" id=5]
 [ext_resource path="res://assets/ui/icons/menu.png" type="Texture" id=6]
 [ext_resource path="res://assets/ui/icons/map.png" type="Texture" id=7]
-[ext_resource path="res://assets/ui/fonts/montserrat_eb_48.tres" type="DynamicFont" id=8]
+[ext_resource path="res://scene/control/disconnect_dialog_confirm/disconect_dialog_confirm.tscn" type="PackedScene" id=8]
 [ext_resource path="res://assets/ui/fonts/montserrat_eb_32.tres" type="DynamicFont" id=9]
 [ext_resource path="res://scene/control/score_board/score_board.tscn" type="PackedScene" id=10]
 [ext_resource path="res://assets/deadscreen/deadscreen.tscn" type="PackedScene" id=11]
@@ -133,97 +133,8 @@ visible = false
 [node name="score_board" parent="CanvasLayer/Control" instance=ExtResource( 10 )]
 visible = false
 
-[node name="disconect_dialog_confirm" type="PanelContainer" parent="CanvasLayer/Control"]
+[node name="disconect_dialog_confirm" parent="CanvasLayer/Control" instance=ExtResource( 8 )]
 visible = false
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-margin_left = -250.0
-margin_top = -183.0
-margin_right = 250.0
-margin_bottom = 183.0
-rect_min_size = Vector2( 200, 200 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Control/disconect_dialog_confirm"]
-margin_left = 7.0
-margin_top = 7.0
-margin_right = 493.0
-margin_bottom = 359.0
-
-[node name="Label" type="Label" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer"]
-margin_right = 486.0
-margin_bottom = 60.0
-custom_fonts/font = ExtResource( 8 )
-text = "Disconnect"
-align = 1
-valign = 1
-
-[node name="Label2" type="Label" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer"]
-margin_top = 64.0
-margin_right = 486.0
-margin_bottom = 190.0
-custom_fonts/font = ExtResource( 9 )
-text = "
-Are you sure 
-want to disconnect?"
-align = 1
-valign = 1
-
-[node name="MarginContainer2" type="MarginContainer" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer"]
-margin_top = 194.0
-margin_right = 486.0
-margin_bottom = 234.0
-rect_min_size = Vector2( 0, 40 )
-
-[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer"]
-margin_top = 238.0
-margin_right = 486.0
-margin_bottom = 338.0
-rect_min_size = Vector2( 0, 100 )
-
-[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer/HBoxContainer"]
-margin_right = 10.0
-margin_bottom = 100.0
-rect_min_size = Vector2( 10, 0 )
-
-[node name="yes" type="Button" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer/HBoxContainer"]
-margin_left = 14.0
-margin_right = 234.0
-margin_bottom = 100.0
-rect_min_size = Vector2( 80, 0 )
-size_flags_horizontal = 3
-custom_fonts/font = ExtResource( 8 )
-text = "Yes"
-
-[node name="MarginContainer2" type="MarginContainer" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer/HBoxContainer"]
-margin_left = 238.0
-margin_right = 248.0
-margin_bottom = 100.0
-rect_min_size = Vector2( 10, 0 )
-
-[node name="no" type="Button" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer/HBoxContainer"]
-margin_left = 252.0
-margin_right = 472.0
-margin_bottom = 100.0
-size_flags_horizontal = 3
-custom_fonts/font = ExtResource( 8 )
-text = "No"
-
-[node name="MarginContainer3" type="MarginContainer" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer/HBoxContainer"]
-margin_left = 476.0
-margin_right = 486.0
-margin_bottom = 100.0
-rect_min_size = Vector2( 10, 0 )
-
-[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer"]
-margin_top = 342.0
-margin_right = 486.0
-margin_bottom = 352.0
-rect_min_size = Vector2( 0, 10 )
 
 [node name="loading" parent="CanvasLayer" instance=ExtResource( 12 )]
 visible = false
@@ -235,5 +146,5 @@ visible = false
 [connection signal="toggled" from="CanvasLayer/Control/bottom_menu/HBoxContainer/expand_map_button" to="." method="_on_expand_map_button_toggled"]
 [connection signal="toggled" from="CanvasLayer/Control/bottom_menu/HBoxContainer/autoplay_button" to="." method="_on_autoplay_button_toggled"]
 [connection signal="disconnect" from="CanvasLayer/Control/score_board" to="." method="_on_score_board_disconnect"]
-[connection signal="pressed" from="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer/HBoxContainer/yes" to="." method="_on_yes_pressed"]
-[connection signal="pressed" from="CanvasLayer/Control/disconect_dialog_confirm/VBoxContainer/HBoxContainer/no" to="." method="_on_no_pressed"]
+[connection signal="on_no" from="CanvasLayer/Control/disconect_dialog_confirm" to="." method="_on_disconect_dialog_confirm_on_no"]
+[connection signal="on_yes" from="CanvasLayer/Control/disconect_dialog_confirm" to="." method="_on_disconect_dialog_confirm_on_yes"]

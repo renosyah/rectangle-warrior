@@ -65,23 +65,17 @@ var camera = null # nodePath
 var rally_point = null # vector2
 var killed_by = null
 
-var _velocity = Vector2.ZERO
-var _state = IDLE
-var _facing_direction = 1
+var _velocity : Vector2 = Vector2.ZERO
+var _state : int  = IDLE
+var _facing_direction : int  = 1
 
-puppet var _puppet_position = position setget puppet_position_set
-puppet var _puppet_state = IDLE
-puppet var _puppet_facing_direction = 1
-puppet var _puppet_velocity = Vector2.ZERO setget puppet_velocity_set
+puppet var _puppet_position  : Vector2 = position setget puppet_position_set
+puppet var _puppet_state : int = IDLE
+puppet var _puppet_facing_direction : int = 1
+puppet var _puppet_velocity : Vector2 = Vector2.ZERO setget puppet_velocity_set
 
-var label_color = Color.white
-var data = {}
-
-# Called when the node enters the scene tree for the first time.
-func _ready():
-	set_physics_process(false)
-	_highlight.visible = false
-	make_ready()
+var label_color : Color = Color.white
+var data : Dictionary = {}
 	
 func make_ready():
 	
@@ -133,20 +127,29 @@ func highlight():
 	_touch_detection.visible = false
 	_highlight.visible = true
 	
-func _check_facing_direction(_direction) -> int:
-	if _direction.x > 0:
-		return 1
-	return -1
-
-
-func puppet_position_set(_val):
+func set_spawn_time():
+	_spawn_time.wait_time = 5.0
+	_spawn_time.start()
+	
+func puppet_position_set(_val : Vector2):
 	_puppet_position = _val
 	_tween.interpolate_property(self,"position", position, _puppet_position, 0.1)
 	_tween.start()
 	
-func puppet_velocity_set(_val):
+func puppet_velocity_set(_val : Vector2):
 	_puppet_velocity = _val
 	_velocity = _puppet_velocity
+	
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	set_physics_process(false)
+	_highlight.visible = false
+	make_ready()
+	
+func _check_facing_direction(_direction : Vector2) -> int:
+	if _direction.x > 0:
+		return 1
+	return -1
 	
 remotesync func _play_attack():
 	_upper_animation.play("swing")
@@ -159,7 +162,7 @@ remotesync func _holsted():
 func _on_attack_execute():
 	if is_network_master() and is_instance_valid(target):
 		if _rng.randf() < ATTACK_ACCURACY:
-			target.rpc("hit", ATTACK_DMG, name, data)
+			target.rpc("_hit", ATTACK_DMG, name, data)
 	
 	
 func _show_hit_effect():
@@ -167,7 +170,7 @@ func _show_hit_effect():
 	_hit_delay.start()
 	
 	
-remotesync func hit(_dmg, _node_name ,_by):
+remotesync func _hit(_dmg : float, _node_name : String, _by : Dictionary):
 	HIT_POINT -= _dmg
 	_hitpoint.value = HIT_POINT
 	_play_stab_sound()
@@ -177,11 +180,11 @@ remotesync func hit(_dmg, _node_name ,_by):
 	_show_hit_effect()
 	
 	if HIT_POINT < 0.0:
-		rpc("die", _by)
+		rpc("_die", _by)
 		
 	
 	
-remotesync func die(_by):
+remotesync func _die(_by : Dictionary):
 	killed_by = _by
 	is_alive = false
 	_play_dead_sound()
@@ -198,7 +201,7 @@ func _process(_delta):
 	if is_network_master():
 		_master_move(_delta)
 	else:
-		puppet_update(_delta)
+		_puppet_update(_delta)
 	
 func _master_move(_delta):
 	var distance_to_target = 0.0
@@ -275,7 +278,7 @@ func _master_move(_delta):
 	_velocity = move_and_slide(_velocity)
 		
 		
-func puppet_update(_delta):
+func _puppet_update(_delta):
 	if not is_alive:
 		return
 		
@@ -296,15 +299,15 @@ func _on_Timer_timeout():
 	
 func _on_Control_gui_input(event):
 	if event is InputEventMouseButton and event.is_action_pressed("left_click"):
-		on_warrior_click()
+		_on_warrior_click()
 		
 	_touch_input.check_input(event)
 
 func _on_touch_input_any_gesture(_sig, val):
 	if val is InputEventSingleScreenTap:
-		on_warrior_click()
+		_on_warrior_click()
 	
-func on_warrior_click():
+func _on_warrior_click():
 	emit_signal("on_click", self)
 	
 func _on_network_tickrate_timeout():
@@ -316,13 +319,10 @@ func _on_network_tickrate_timeout():
 	
 	
 func _on_spawn_time_timeout():
-	rpc("spawn")
+	rpc("_spawn")
 	
-func set_spawn_time():
-	_spawn_time.wait_time = 5.0
-	_spawn_time.start()
 	
-remotesync func spawn():
+remotesync func _spawn():
 	HIT_POINT = 10.0
 	_hitpoint.value = HIT_POINT
 	is_alive = true
