@@ -16,40 +16,40 @@ signal player_connected_data_not_found(player_network_unique_id)
 signal player_disconnected(player_network_unique_id)
 signal server_disconnected()
 signal connection_closed()
-signal error(err)
+signal connection_failed()
 
 func _ready():
 	get_tree().connect('network_peer_connected', self, '_network_peer_connected')
 	get_tree().connect('network_peer_disconnected', self, '_on_peer_disconnected')
 	get_tree().connect('server_disconnected', self, '_on_server_disconnected')
 	
-func create_server(_max_player : int = MAX_PLAYERS, _port :int = DEFAULT_PORT, _data : Dictionary = {}):
+func create_server(_max_player : int = MAX_PLAYERS, _port :int = DEFAULT_PORT, _data : Dictionary = {}) -> int:
 	data = _data
 	players[PLAYER_HOST_ID] = data
 	var peer = NetworkedMultiplayerENet.new()
 	var err = peer.create_server(_port, _max_player)
 	if err != OK:
-		emit_signal("error",err)
-		return
+		return err
 		
 	get_tree().set_network_peer(null) 
 	get_tree().set_network_peer(peer)
 	emit_signal("server_player_connected", PLAYER_HOST_ID, data)
 	rpc('_receive_broadcast_player_info', PLAYER_HOST_ID, data)
+	return OK
 	
 	
-func connect_to_server(_ip:String = DEFAULT_IP, _port :int = DEFAULT_PORT, _data: Dictionary = {}):
+func connect_to_server(_ip:String = DEFAULT_IP, _port :int = DEFAULT_PORT, _data: Dictionary = {}) -> int:
 	data = _data
 	var peer = NetworkedMultiplayerENet.new()
 	var err = peer.create_client(_ip,_port)
 	if err != OK:
-		emit_signal("error",err)
-		return
+		return err
 		
 	get_tree().connect('connected_to_server', self, '_connected_to_server')
+	get_tree().connect('connection_failed', self,'_connection_to_server_failed')
 	get_tree().set_network_peer(null) 
 	get_tree().set_network_peer(peer)
-	
+	return OK
 	
 	
 	
@@ -80,6 +80,11 @@ func _connected_to_server():
 	var local_player_id = get_tree().get_network_unique_id()
 	emit_signal("client_player_connected", local_player_id, data)
 	rpc_id(PLAYER_HOST_ID,'_send_player_info', local_player_id, data)
+	
+	
+func _connection_to_server_failed():
+	emit_signal("connection_failed")
+	
 	
 # server receive data
 # from joined player and prepare

@@ -39,7 +39,12 @@ func _ready():
 	
 # if game running as host
 func host():
-	_network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, Global.player)
+	var err = _network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, Global.player)
+	if err != OK:
+		Global.network_error = "Failed host game!"
+		to_main_menu()
+		return
+		
 	update_score(Global.player, 0)
 	
 	for mob in Global.battle_setting.bots:
@@ -59,8 +64,12 @@ func host():
 	
 # if game running as client
 func join():
-	_network.connect_to_server(Global.battle_setting.ip, Global.battle_setting.port,Global.player)
-	
+	var err = _network.connect_to_server(Global.battle_setting.ip, Global.battle_setting.port,Global.player)
+	if err != OK:
+		Global.network_error = "Failed join game!"
+		to_main_menu()
+		return
+		
 	for mob in Global.battle_setting.bots:
 		spawn_mob(mob.network_master_id, mob.name, mob.data, false)
 	
@@ -394,13 +403,12 @@ func _on_network_server_disconnected():
 	Global.network_error = "Disconnected from server!"
 	to_main_menu()
 	
-func _on_network_error(err):
-	Global.network_error = str(err)
-	
 func _on_network_connection_closed():
 	to_main_menu()
 	
-	
+func _on_network_connection_failed():
+	Global.network_error = "Failed connect to server!"
+	to_main_menu()
 	
 	
 	
@@ -409,6 +417,9 @@ func _on_network_connection_closed():
 func _on_loading_timer_timeout():
 	_control.show_loading(false)
 	_control.show_control(true)
+
+
+
 
 
 

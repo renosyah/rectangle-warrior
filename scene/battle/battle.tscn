@@ -38,7 +38,7 @@ one_shot = true
 
 [connection signal="client_player_connected" from="network" to="." method="_on_network_client_player_connected"]
 [connection signal="connection_closed" from="network" to="." method="_on_network_connection_closed"]
-[connection signal="error" from="network" to="." method="_on_network_error"]
+[connection signal="connection_failed" from="network" to="." method="_on_network_connection_failed"]
 [connection signal="player_connected" from="network" to="." method="_on_network_player_connected"]
 [connection signal="player_connected_data_not_found" from="network" to="." method="_on_network_player_connected_data_not_found"]
 [connection signal="player_connected_data_receive" from="network" to="." method="_on_network_player_connected_data_receive"]
