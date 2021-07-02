@@ -39,13 +39,8 @@ func _ready():
 	
 # if game running as host
 func host():
-	var _data = {
-		id = Global.player_id,
-		name = Global.player_name, 
-		html_color = Global.html_color
-	}
-	_network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, _data)
-	update_score(_data, 0)
+	_network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, Global.player)
+	update_score(Global.player, 0)
 	
 	for mob in Global.battle_setting.bots:
 		update_score(mob.data, 0)
@@ -64,12 +59,7 @@ func host():
 	
 # if game running as client
 func join():
-	var _data = { 
-		id = Global.player_id,
-		name = Global.player_name, 
-		html_color = Global.html_color
-	}
-	_network.connect_to_server(Global.battle_setting.ip, Global.battle_setting.port, _data)
+	_network.connect_to_server(Global.battle_setting.ip, Global.battle_setting.port,Global.player)
 	
 	for mob in Global.battle_setting.bots:
 		spawn_mob(mob.network_master_id, mob.name, mob.data, false)
@@ -305,7 +295,7 @@ func _on_network_server_player_connected(player_network_unique_id, data):
 	spawn_playable_character(player_network_unique_id, data)
 	_control.set_interface_color(Color(data.html_color))
 	_server_advertise.setup()
-	_server_advertise.serverInfo["name"] = Global.player_name + " on " + OS.get_name()
+	_server_advertise.serverInfo["name"] = Global.player.name + " on " + OS.get_name()
 	_server_advertise.serverInfo["port"] = _network.DEFAULT_PORT
 	_server_advertise.serverInfo["public"] = true
 	_server_advertise.serverInfo["bots"] = Global.battle_setting.bots

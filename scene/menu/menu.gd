@@ -15,6 +15,13 @@ func _ready():
 		_error_dialog.show_message(Global.network_error)
 		_error_dialog.visible = true
 		
+	set_background()
+	_dialog_input_name.visible = false
+	_host_setting.visible = false
+	_find_server.visible = false
+	_main_menu.visible = true
+	
+func set_background():
 	_terrain.biom = Biom.BIOMS[_rng.randf_range(0,Biom.BIOMS.size())].id
 	_terrain.create_simplex()
 	_terrain.setup_enviroment()
@@ -26,11 +33,6 @@ func _ready():
 		elif enviroment.type == "tree":
 			_terrain.spawn_tree(_tree_holder,enviroment.texture_asset,enviroment.position)
 		
-		
-	_dialog_input_name.visible = false
-	_host_setting.visible = false
-	_find_server.visible = false
-	_main_menu.visible = true
 	
 func _on_find_button_pressed():
 	_dialog_input_name.visible = true
@@ -54,8 +56,8 @@ func _on_find_server_on_create():
 
 	
 func _on_input_name_on_continue(_player_name, html_color):
-	Global.player_name = _player_name
-	Global.html_color = html_color
+	Global.player.name = _player_name
+	Global.player.html_color = html_color
 	_dialog_input_name.visible = false
 	
 	_find_server.start_finding()
