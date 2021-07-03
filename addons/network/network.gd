@@ -34,7 +34,6 @@ func create_server(_max_player : int = MAX_PLAYERS, _port :int = DEFAULT_PORT, _
 	get_tree().set_network_peer(null) 
 	get_tree().set_network_peer(peer)
 	emit_signal("server_player_connected", PLAYER_HOST_ID, data)
-	rpc('_receive_broadcast_player_info', PLAYER_HOST_ID, data)
 	return OK
 	
 	
@@ -104,7 +103,6 @@ func _network_peer_connected(player_network_unique_id : int):
 		return
 		
 	emit_signal("player_connected", player_network_unique_id)
-	request_player_info(player_network_unique_id)
 	
 	
 func request_player_info(player_network_unique_id : int) -> void:

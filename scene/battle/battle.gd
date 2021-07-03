@@ -2,7 +2,6 @@ extends Node
 
 signal attack_target(target)
 
-const MP_PLAYER = preload("res://scene/mp_character/mp_player.tscn")
 const WARRIOR = preload("res://scene/warrior/warrior.tscn")
 
 onready var _rng = RandomNumberGenerator.new()
@@ -32,23 +31,23 @@ func _ready():
 	
 # if game running as host
 func host():
+	update_score(Global.player, 0)
+		
 	var err = _network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, Global.player)
 	if err != OK:
 		Global.network_error = "Failed host game!"
 		to_main_menu()
 		return
 		
-	update_score(Global.player, 0)
-	
 	for mob in Global.battle_setting.bots:
 		update_score(mob.data, 0)
 		spawn_mob(mob.network_master_id, mob.name, mob.data, true)
-	
+		
 	_terrain.biom = Biom.BIOMS[_rng.randf_range(0,Biom.BIOMS.size())].id
 	_terrain.create_simplex()
 	_terrain.setup_enviroment()
 	_terrain.generate_battlefield()
-	
+		
 	for enviroment in _terrain.enviroments:
 		if enviroment.type == "bush":
 			_terrain.spawn_bush(_bush_holder,enviroment.texture_asset,enviroment.position)
@@ -59,20 +58,19 @@ func host():
 	
 # if game running as client
 func join():
+	update_score(Global.player, 0)
+		
 	var err = _network.connect_to_server(Global.battle_setting.ip, Global.battle_setting.port,Global.player)
 	if err != OK:
 		Global.network_error = "Failed join game!"
 		to_main_menu()
 		return
 		
-	update_score(Global.player, 0)
-	
 	for mob in Global.battle_setting.bots:
 		update_score(mob.data, 0)
 		spawn_mob(mob.network_master_id, mob.name, mob.data, false)
 		
 	_control.update_scoreboard(scoredata)
-	
 	
 	
 	
@@ -164,7 +162,7 @@ func spawn_playable_character(player_network_unique_id : int, data : Dictionary)
 	warrior.connect("on_dead", self, "_on_player_dead")
 	_warrior_holder.add_child(warrior)
 	warrior.highlight()
-	
+		
 	_camera.set_anchor(warrior)
 	_control.connect("touch_position", warrior, "move_to")
 	connect("attack_target", warrior, "attack_target")
@@ -283,34 +281,25 @@ remotesync func update_score_display(_score_data):
 # function _on_network_player_connected is to make sure
 # puppet is exist on all side then receive the data for puppet
 func _on_network_player_connected(player_network_unique_id : int):
-	var _puppet_mp_character = MP_PLAYER.instance()
-	_puppet_mp_character.name = str(player_network_unique_id)
-	_puppet_mp_character.visible = false
-	_puppet_mp_character.set_network_master(player_network_unique_id)
-	_warrior_holder.add_child(_puppet_mp_character)
-	
-func _on_network_player_connected_data_not_found(player_network_unique_id : int):
-	yield(get_tree().create_timer(1.0), "timeout")
-	_network.request_player_info(player_network_unique_id)
+	var _puppet_warrior = WARRIOR.instance()
+	_puppet_warrior.name = str(player_network_unique_id)
+	_puppet_warrior.visible = false
+	_puppet_warrior.set_network_master(player_network_unique_id)
+	_warrior_holder.add_child(_puppet_warrior)
+		
+	if not get_tree().is_network_server():
+		_network.request_player_info(player_network_unique_id)
 	
 func _on_network_player_connected_data_receive(player_network_unique_id : int, data : Dictionary):
-	var _puppet_mp_character = get_node(NodePath(str(_warrior_holder.get_path()) + "/" + str(player_network_unique_id))) 
-	if not is_instance_valid(_puppet_mp_character):
+	var _puppet_warrior = get_node(NodePath(str(_warrior_holder.get_path()) + "/" + str(player_network_unique_id))) 
+	if not is_instance_valid(_puppet_warrior):
 		return
 		
-	_warrior_holder.remove_child(_puppet_mp_character)
-	_puppet_mp_character.queue_free()
-	
 	if get_tree().is_network_server():
 		update_score(data, 0)
 		
-	var _puppet_warrior = WARRIOR.instance()
-	_warrior_holder.add_child(_puppet_warrior)
-	
-	_puppet_warrior.name = str(player_network_unique_id)
-	_puppet_warrior.set_network_master(player_network_unique_id)
-	_puppet_warrior.data = data
 	_puppet_warrior.visible = true
+	_puppet_warrior.data = data
 	_puppet_warrior.label_color = Color.red
 	_puppet_warrior.connect("on_click", self,"_on_puppet_warrior_click")
 	_puppet_warrior.connect("on_dead", self, "_on_puppet_warrior_dead")
@@ -326,7 +315,10 @@ func _on_puppet_warrior_dead(_warrior : KinematicBody2D, killed_by : Dictionary)
 	if get_tree().is_network_server():
 		update_score(killed_by, 1)
 	
-	
+func _on_network_player_connected_data_not_found(player_network_unique_id : int):
+	yield(get_tree().create_timer(1.0), "timeout")
+	if not get_tree().is_network_server():
+		_network.request_player_info(player_network_unique_id)
 	
 	
 	

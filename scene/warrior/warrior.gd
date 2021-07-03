@@ -1,4 +1,13 @@
-extends "res://scene/mp_character/mp_character.gd"
+extends KinematicBody2D
+
+enum { IDLE,WALKING }
+const MOVE_SPEED = 90.0
+const RANGE_ATTACK = 80.0
+var HIT_POINT = 10.0
+var ATTACK_DMG = 1.0
+var ATTACK_ACCURACY = 0.5
+var MINIMAP_MARKER = "troop"
+var MINIMAP_COLOR = Color.white
 
 const dead_sound = [
 	preload("res://assets/sound/maledeath1.wav"),
@@ -61,13 +70,15 @@ var _velocity : Vector2 = Vector2.ZERO
 var _state : int  = IDLE
 var _facing_direction : int  = 1
 
-
+puppet var _puppet_position : Vector2 = position setget _set_puppet_position
+puppet var _puppet_state : int = IDLE setget _set_puppet_state
+puppet var _puppet_facing_direction : int = 1 setget _set_puppet_facing_direction
+puppet var _puppet_velocity : Vector2 = Vector2.ZERO setget _set_puppet_velocity
 
 var label_color : Color = Color.white
 var data : Dictionary = {}
 	
 func make_ready():
-	
 	if camera:
 		_remote_transform.remote_path = camera
 		_remote_transform.update()
@@ -120,28 +131,32 @@ func set_spawn_time():
 	_spawn_time.wait_time = 5.0
 	_spawn_time.start()
 	
-func _on_puppet_position_update(_val : Vector2):
+func _set_puppet_position(_val : Vector2):
+	_puppet_position = _val
 	if not is_alive:
-		position = _val
+		position = _puppet_position
 		return
 		
 	_tween.interpolate_property(self,"position", position, _val, 0.1)
 	_tween.start()
 	
-func _on_puppet_facing_direction_update(_val : int):
+func _set_puppet_facing_direction(_val : int):
+	_puppet_facing_direction = _val
 	if not is_alive:
 		return
 		
 	_tween.interpolate_property(_body ,"scale", _body.scale, Vector2(_val, _body.scale.y), 0.1)
 	_tween.start()
 	
-func _on_puppet_velocity_update(_val : Vector2):
+func _set_puppet_velocity(_val : Vector2):
+	_puppet_velocity = _val
 	if not is_alive:
 		return
 		
 	_velocity = _val
 	
-func _on_puppet_state_update(_val : int):
+func _set_puppet_state(_val : int):
+	_puppet_state = _val
 	if not is_alive:
 		return
 		
@@ -150,7 +165,6 @@ func _on_puppet_state_update(_val : int):
 			_animation.play("idle")
 		WALKING:
 			_animation.play("walking")
-	
 	
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -270,7 +284,7 @@ func _master_move(_delta):
 					 0.1
 				)
 				_tween.start()
-			
+				
 				_velocity = direction * MOVE_SPEED
 				
 			elif distance_to_target <= RANGE_ATTACK:

@@ -163,10 +163,6 @@ one_shot = true
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
 
-[connection signal="_on_puppet_facing_direction_update" from="." to="." method="_on_puppet_facing_direction_update"]
-[connection signal="_on_puppet_position_update" from="." to="." method="_on_puppet_position_update"]
-[connection signal="_on_puppet_state_update" from="." to="." method="_on_puppet_state_update"]
-[connection signal="_on_puppet_velocity_update" from="." to="." method="_on_puppet_velocity_update"]
 [connection signal="gui_input" from="Node2D/Control" to="." method="_on_Control_gui_input"]
 [connection signal="timeout" from="Timer" to="." method="_on_Timer_timeout"]
 [connection signal="any_gesture" from="touch_input" to="." method="_on_touch_input_any_gesture"]
