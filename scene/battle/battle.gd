@@ -2,6 +2,7 @@ extends Node
 
 signal attack_target(target)
 
+const MP_PLAYER = preload("res://scene/mp_character/mp_player.tscn")
 const WARRIOR = preload("res://scene/warrior/warrior.tscn")
 
 onready var _rng = RandomNumberGenerator.new()
@@ -282,25 +283,32 @@ remotesync func update_score_display(_score_data):
 # function _on_network_player_connected is to make sure
 # puppet is exist on all side then receive the data for puppet
 func _on_network_player_connected(player_network_unique_id : int):
-	var _puppet_warrior = WARRIOR.instance()
-	_puppet_warrior.name = str(player_network_unique_id)
-	_puppet_warrior.visible = false
-	_puppet_warrior.set_network_master(player_network_unique_id)
-	_warrior_holder.add_child(_puppet_warrior)
+	var _puppet_mp_character = MP_PLAYER.instance()
+	_puppet_mp_character.name = str(player_network_unique_id)
+	_puppet_mp_character.visible = false
+	_puppet_mp_character.set_network_master(player_network_unique_id)
+	_warrior_holder.add_child(_puppet_mp_character)
 	
 func _on_network_player_connected_data_not_found(player_network_unique_id : int):
 	yield(get_tree().create_timer(1.0), "timeout")
 	_network.request_player_info(player_network_unique_id)
 	
 func _on_network_player_connected_data_receive(player_network_unique_id : int, data : Dictionary):
-	var _puppet_warrior = get_node(NodePath(str(_warrior_holder.get_path()) + "/" + str(player_network_unique_id))) 
-	if not is_instance_valid(_puppet_warrior):
+	var _puppet_mp_character = get_node(NodePath(str(_warrior_holder.get_path()) + "/" + str(player_network_unique_id))) 
+	if not is_instance_valid(_puppet_mp_character):
 		return
 		
+	_warrior_holder.remove_child(_puppet_mp_character)
+	_puppet_mp_character.queue_free()
+	
 	if get_tree().is_network_server():
 		update_score(data, 0)
 		
-	_puppet_warrior = get_node(NodePath(str(_warrior_holder.get_path()) + "/" + str(player_network_unique_id))) 
+	var _puppet_warrior = WARRIOR.instance()
+	_warrior_holder.add_child(_puppet_warrior)
+	
+	_puppet_warrior.name = str(player_network_unique_id)
+	_puppet_warrior.set_network_master(player_network_unique_id)
 	_puppet_warrior.data = data
 	_puppet_warrior.visible = true
 	_puppet_warrior.label_color = Color.red

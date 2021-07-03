@@ -1,13 +1,4 @@
-extends KinematicBody2D
-
-enum { IDLE,WALKING }
-const MOVE_SPEED = 90.0
-const RANGE_ATTACK = 80.0
-var HIT_POINT = 10.0
-var ATTACK_DMG = 1.0
-var ATTACK_ACCURACY = 0.5
-var MINIMAP_MARKER = "troop"
-var MINIMAP_COLOR = Color.white
+extends "res://scene/mp_character/mp_character.gd"
 
 const dead_sound = [
 	preload("res://assets/sound/maledeath1.wav"),
@@ -70,10 +61,7 @@ var _velocity : Vector2 = Vector2.ZERO
 var _state : int  = IDLE
 var _facing_direction : int  = 1
 
-puppet var _puppet_position  : Vector2 = position setget puppet_position_set
-puppet var _puppet_state : int = IDLE
-puppet var _puppet_facing_direction : int = 1 setget _puppet_facing_direction_set
-puppet var _puppet_velocity : Vector2 = Vector2.ZERO setget puppet_velocity_set
+
 
 var label_color : Color = Color.white
 var data : Dictionary = {}
@@ -132,19 +120,37 @@ func set_spawn_time():
 	_spawn_time.wait_time = 5.0
 	_spawn_time.start()
 	
-func puppet_position_set(_val : Vector2):
-	_puppet_position = _val
-	_tween.interpolate_property(self,"position", position, _puppet_position, 0.1)
+func _on_puppet_position_update(_val : Vector2):
+	if not is_alive:
+		position = _val
+		return
+		
+	_tween.interpolate_property(self,"position", position, _val, 0.1)
 	_tween.start()
 	
-func _puppet_facing_direction_set(_val : int):
-	_puppet_facing_direction = _val  
-	_tween.interpolate_property(_body ,"scale", _body.scale, Vector2(_puppet_facing_direction, _body.scale.y), 0.1)
+func _on_puppet_facing_direction_update(_val : int):
+	if not is_alive:
+		return
+		
+	_tween.interpolate_property(_body ,"scale", _body.scale, Vector2(_val, _body.scale.y), 0.1)
 	_tween.start()
 	
-func puppet_velocity_set(_val : Vector2):
-	_puppet_velocity = _val
-	_velocity = _puppet_velocity
+func _on_puppet_velocity_update(_val : Vector2):
+	if not is_alive:
+		return
+		
+	_velocity = _val
+	
+func _on_puppet_state_update(_val : int):
+	if not is_alive:
+		return
+		
+	match _puppet_state:
+		IDLE:
+			_animation.play("idle")
+		WALKING:
+			_animation.play("walking")
+	
 	
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -309,12 +315,6 @@ func _puppet_update(_delta):
 		
 	if not _tween.is_active():
 		move_and_slide(_velocity)
-		
-	match _puppet_state:
-		IDLE:
-			_animation.play("idle")
-		WALKING:
-			_animation.play("walking")
 		
 		
 func _on_Timer_timeout():
