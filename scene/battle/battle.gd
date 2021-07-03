@@ -2,7 +2,6 @@ extends Node
 
 signal attack_target(target)
 
-
 const WARRIOR = preload("res://scene/warrior/warrior.tscn")
 
 onready var _rng = RandomNumberGenerator.new()
@@ -29,12 +28,6 @@ func _ready():
 		 
 	_control.show_control(false)
 	_control.set_minimap_camera(_camera)
-	
-	
-	
-	
-	
-	
 	
 # if game running as host
 func host():
@@ -82,6 +75,8 @@ func join():
 	
 	
 	
+	
+	
 # score data section
 func update_score(for_player : Dictionary, add_kill_count:int = 0):
 	if not scoredata.has(for_player.id):
@@ -93,6 +88,7 @@ func update_score(for_player : Dictionary, add_kill_count:int = 0):
 		
 	scoredata[for_player.id].kill_count += add_kill_count
 	rpc("update_score_display", scoredata)
+	
 	
 	
 	
@@ -202,7 +198,6 @@ func _on_player_dead(warrior : KinematicBody2D, killed_by : Dictionary):
 	
 	
 	
-	
 # autoplay to make player master character
 # play by it self
 func autoplay(warrior : KinematicBody2D):
@@ -213,7 +208,6 @@ func autoplay(warrior : KinematicBody2D):
 		return
 		
 	warrior.attack_target(_target)
-	
 	
 	
 	
@@ -416,11 +410,6 @@ func _on_network_connection_failed():
 func _on_loading_timer_timeout():
 	_control.show_loading(false)
 	_control.show_control(true)
-
-
-
-
-
-
-
-
+	
+	
+	

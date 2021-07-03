@@ -72,7 +72,7 @@ var _facing_direction : int  = 1
 
 puppet var _puppet_position  : Vector2 = position setget puppet_position_set
 puppet var _puppet_state : int = IDLE
-puppet var _puppet_facing_direction : int = 1
+puppet var _puppet_facing_direction : int = 1 setget _puppet_facing_direction_set
 puppet var _puppet_velocity : Vector2 = Vector2.ZERO setget puppet_velocity_set
 
 var label_color : Color = Color.white
@@ -135,6 +135,11 @@ func set_spawn_time():
 func puppet_position_set(_val : Vector2):
 	_puppet_position = _val
 	_tween.interpolate_property(self,"position", position, _puppet_position, 0.1)
+	_tween.start()
+	
+func _puppet_facing_direction_set(_val : int):
+	_puppet_facing_direction = _val  
+	_tween.interpolate_property(_body ,"scale", _body.scale, Vector2(_puppet_facing_direction, _body.scale.y), 0.1)
 	_tween.start()
 	
 func puppet_velocity_set(_val : Vector2):
@@ -224,7 +229,12 @@ func _master_move(_delta):
 		if distance_to_target > 55.0:
 			_state = WALKING
 			_animation.play("walking")
-			_body.scale.x = _facing_direction
+			_tween.interpolate_property(
+				_body ,"scale", _body.scale, 
+				Vector2(_facing_direction, _body.scale.y),
+				 0.1
+			)
+			_tween.start()
 			
 			_velocity = direction * MOVE_SPEED
 			
@@ -248,12 +258,22 @@ func _master_move(_delta):
 			if distance_to_target > RANGE_ATTACK:
 				_state = WALKING
 				_animation.play("walking")
-				_body.scale.x = _facing_direction
-				
+				_tween.interpolate_property(
+					_body ,"scale", _body.scale, 
+					Vector2(_facing_direction, _body.scale.y),
+					 0.1
+				)
+				_tween.start()
+			
 				_velocity = direction * MOVE_SPEED
 				
 			elif distance_to_target <= RANGE_ATTACK:
-				_body.scale.x = _facing_direction
+				_tween.interpolate_property(
+					_body ,"scale", _body.scale, 
+					Vector2(_facing_direction, _body.scale.y),
+					 0.1
+				)
+				_tween.start()
 				rpc("_play_attack")
 				
 				if _attack_delay.is_stopped():
@@ -287,7 +307,6 @@ func _puppet_update(_delta):
 	if not is_alive:
 		return
 		
-	_body.scale.x = _puppet_facing_direction
 	if not _tween.is_active():
 		move_and_slide(_velocity)
 		
