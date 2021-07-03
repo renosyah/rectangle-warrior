@@ -154,7 +154,6 @@ one_shot = true
 
 [node name="network_tickrate" type="Timer" parent="."]
 wait_time = 0.08
-autostart = true
 
 [node name="Tween" type="Tween" parent="."]
 

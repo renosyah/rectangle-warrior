@@ -58,6 +58,7 @@ onready var _touch_detection = $Node2D/Control
 onready var _uniform = $body/YSort/Sprite/uniform
 onready var _arms = [$body/YSort/arm_left, $body/YSort/arm_right]
 onready var _legs = [$body/YSort/leg_left, $body/YSort/leg_right]
+onready var _network_tickrate = $network_tickrate
 
 var is_alive = true
 var target : KinematicBody2D = null
@@ -142,6 +143,10 @@ func puppet_velocity_set(_val : Vector2):
 	
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	if is_network_master():
+		_network_tickrate.wait_time = Global.NETWORK_TICKRATE
+		_network_tickrate.start()
+	
 	set_physics_process(false)
 	_highlight.visible = false
 	make_ready()

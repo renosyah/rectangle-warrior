@@ -40,7 +40,7 @@ func set_camera(_camera):
 func set_minimap_border_color(_color):
 	frame.self_modulate = _color
 	
-func _process(delta):
+func _process(_delta):
 	# If no player is assigned, do nothing.
 	if !camera:
 		return
@@ -122,7 +122,7 @@ func _on_MiniMap_gui_input(event):
 		
 	#get_viewport().unhandled_input(event)
 
-func _on_input_touch_is_validated(sig ,event):
+func _on_input_touch_is_validated(_sig ,event):
 	if event is InputEventSingleScreenTap:
 		minimap_click()
 		

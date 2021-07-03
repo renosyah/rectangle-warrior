@@ -7,7 +7,7 @@
 radius = 15.1789
 
 [node name="bush" type="RigidBody2D"]
-mode = 2
+mode = 1
 gravity_scale = 0.0
 script = ExtResource( 1 )
 
@@ -17,13 +17,3 @@ disabled = true
 
 [node name="Sprite" type="Sprite" parent="."]
 texture = ExtResource( 2 )
-
-[node name="Timer" type="Timer" parent="."]
-wait_time = 0.4
-one_shot = true
-autostart = true
-__meta__ = {
-"_editor_description_": ""
-}
-
-[connection signal="timeout" from="Timer" to="." method="_on_Timer_timeout"]

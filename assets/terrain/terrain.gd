@@ -141,7 +141,6 @@ func setup_enviroment():
 			if rng.randf() < 0.15:
 				var x = _x *150
 				var y = _y *150
-				var pos = Vector2(x,y)
 				enviroments.append({
 					type = "tree",
 					position = Vector2(x,y),

@@ -320,7 +320,7 @@ func _on_puppet_warrior_click(warrior : KinematicBody2D):
 	_waypoint.show_waypoint(Color.red, warrior.position)
 	emit_signal("attack_target", warrior)
 	
-func _on_puppet_warrior_dead(warrior : KinematicBody2D, killed_by : Dictionary):
+func _on_puppet_warrior_dead(_warrior : KinematicBody2D, killed_by : Dictionary):
 	if get_tree().is_network_server():
 		update_score(killed_by, 1)
 	

@@ -4,10 +4,10 @@
 [ext_resource path="res://assets/terrain/tree/tree.gd" type="Script" id=2]
 
 [sub_resource type="CircleShape2D" id=1]
-radius = 47.0425
+radius = 33.9635
 
 [node name="tree" type="RigidBody2D"]
-mode = 2
+mode = 1
 gravity_scale = 0.0
 script = ExtResource( 2 )
 
@@ -18,10 +18,3 @@ shape = SubResource( 1 )
 position = Vector2( -1.7818, -85.5263 )
 texture = ExtResource( 1 )
 region_rect = Rect2( 0, 390, 130, 120 )
-
-[node name="Timer" type="Timer" parent="."]
-wait_time = 0.6
-one_shot = true
-autostart = true
-
-[connection signal="timeout" from="Timer" to="." method="_on_Timer_timeout"]

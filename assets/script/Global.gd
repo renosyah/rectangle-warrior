@@ -1,5 +1,6 @@
 extends Node
 
+const NETWORK_TICKRATE = 0.08
 
 var player = {
 	id = GDUUID.v4(),
