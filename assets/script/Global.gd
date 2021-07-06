@@ -4,8 +4,8 @@ const NETWORK_TICKRATE = 0.08
 
 var player = {
 	id = GDUUID.v4(),
-	name = "",
-	html_color = ""
+	name = RandomNameGenerator.generate(),
+	data = {}
 }
 
 var battle_setting = {

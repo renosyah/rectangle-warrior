@@ -31,7 +31,7 @@ func _ready():
 	
 # if game running as host
 func host():
-	update_score(Global.player, 0)
+	update_score(Global.player.data, 0)
 		
 	var err = _network.create_server(_network.MAX_PLAYERS,_network.DEFAULT_PORT, Global.player)
 	if err != OK:
@@ -58,9 +58,9 @@ func host():
 	
 # if game running as client
 func join():
-	update_score(Global.player, 0)
+	update_score(Global.player.data, 0)
 		
-	var err = _network.connect_to_server(Global.battle_setting.ip, Global.battle_setting.port,Global.player)
+	var err = _network.connect_to_server(Global.battle_setting.ip, Global.battle_setting.port, Global.player)
 	if err != OK:
 		Global.network_error = "Failed join game!"
 		to_main_menu()
@@ -78,14 +78,14 @@ func join():
 	
 # score data section
 func update_score(for_player : Dictionary, add_kill_count:int = 0):
-	if not scoredata.has(for_player.id):
-		scoredata[for_player.id] = {
+	if not scoredata.has(for_player.owner_id):
+		scoredata[for_player.owner_id] = {
 			name = for_player.name,
 			kill_count = add_kill_count
 		}
 		return
 		
-	scoredata[for_player.id].kill_count += add_kill_count
+	scoredata[for_player.owner_id].kill_count += add_kill_count
 	rpc("update_score_display", scoredata)
 	
 	
@@ -147,11 +147,11 @@ func _get_random_position() -> Vector2:
 	
 	
 # player playable character section
-func spawn_playable_character(player_network_unique_id : int, data : Dictionary):
+func spawn_playable_character(player_network_unique_id : int, player : Dictionary):
 	var warrior = WARRIOR.instance()
 	warrior.name = str(player_network_unique_id)
 	warrior.set_network_master(player_network_unique_id)
-	warrior.data = data
+	warrior.data = player.data
 	warrior.label_color = Color.blue
 	warrior.camera = _camera.get_path()
 	warrior.position = _get_random_position()
@@ -290,16 +290,16 @@ func _on_network_player_connected(player_network_unique_id : int):
 	if not get_tree().is_network_server():
 		_network.request_player_info(player_network_unique_id)
 	
-func _on_network_player_connected_data_receive(player_network_unique_id : int, data : Dictionary):
+func _on_network_player_connected_data_receive(player_network_unique_id : int, player : Dictionary):
 	var _puppet_warrior = get_node(NodePath(str(_warrior_holder.get_path()) + "/" + str(player_network_unique_id))) 
 	if not is_instance_valid(_puppet_warrior):
 		return
 		
 	if get_tree().is_network_server():
-		update_score(data, 0)
+		update_score(player.data, 0)
 		
 	_puppet_warrior.visible = true
-	_puppet_warrior.data = data
+	_puppet_warrior.data = player.data
 	_puppet_warrior.label_color = Color.red
 	_puppet_warrior.connect("on_click", self,"_on_puppet_warrior_click")
 	_puppet_warrior.connect("on_dead", self, "_on_puppet_warrior_dead")
@@ -364,9 +364,9 @@ remote func _send_terrain_data(_terrain_data : Dictionary):
 	
 	
 # player connection as host/client section
-func _on_network_server_player_connected(player_network_unique_id : int, data : Dictionary):
-	spawn_playable_character(player_network_unique_id, data)
-	_control.set_interface_color(Color(data.html_color))
+func _on_network_server_player_connected(player_network_unique_id : int, player : Dictionary):
+	spawn_playable_character(player_network_unique_id, player)
+	_control.set_interface_color(Color(player.data.html_color))
 	_server_advertise.setup()
 	_server_advertise.serverInfo["name"] = Global.player.name + " on " + OS.get_name()
 	_server_advertise.serverInfo["port"] = _network.DEFAULT_PORT
@@ -374,9 +374,9 @@ func _on_network_server_player_connected(player_network_unique_id : int, data : 
 	_server_advertise.serverInfo["bots"] = Global.battle_setting.bots
 	
 	
-func _on_network_client_player_connected(player_network_unique_id : int, data : Dictionary):
-	spawn_playable_character(player_network_unique_id, data)
-	_control.set_interface_color(Color(data.html_color))
+func _on_network_client_player_connected(player_network_unique_id : int, player : Dictionary):
+	spawn_playable_character(player_network_unique_id, player)
+	_control.set_interface_color(Color(player.data.html_color))
 	rpc_id(_network.PLAYER_HOST_ID,"_request_terrain_data",player_network_unique_id)
 	
 	

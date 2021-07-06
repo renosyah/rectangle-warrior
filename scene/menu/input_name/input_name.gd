@@ -13,11 +13,15 @@ var html_color = ""
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	_input_name.text = RandomNameGenerator.generate()
+	_input_name.text = player_name
 	_rng.randomize()
 	_ready_button.disabled = false
 	_on_choose_color_pressed()
-
+	
+func set_player_name(_name):
+	player_name = _name
+	_input_name.text = player_name
+	
 func _on_continue_pressed():
 	player_name = _input_name.text
 	emit_signal("on_continue", player_name, html_color)

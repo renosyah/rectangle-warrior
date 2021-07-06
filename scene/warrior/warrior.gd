@@ -1,11 +1,6 @@
 extends KinematicBody2D
 
 enum { IDLE,WALKING }
-const MOVE_SPEED = 90.0
-const RANGE_ATTACK = 80.0
-var HIT_POINT = 10.0
-var ATTACK_DMG = 1.0
-var ATTACK_ACCURACY = 0.5
 var MINIMAP_MARKER = "troop"
 var MINIMAP_COLOR = Color.white
 
@@ -101,7 +96,8 @@ func make_ready():
 	rally_point = null
 	target = null
 	killed_by = null
-	_hitpoint.value = HIT_POINT
+	_hitpoint.max_value = data.max_hitpoint
+	_hitpoint.value = data.hitpoint
 
 	_idle_timer.wait_time = 1.0
 	_idle_timer.start()
@@ -191,8 +187,9 @@ remotesync func _holsted():
 	
 func _on_attack_execute():
 	if is_network_master() and is_instance_valid(target):
-		if _rng.randf() < ATTACK_ACCURACY:
-			target.rpc("_hit", ATTACK_DMG, name, data)
+		if data.type == WarriorData.TYPE_SWORD_INFANTRY:
+			if _rng.randf() < data.attack_accuracy:
+				target.rpc("_hit", data.melee_damage, name, data)
 	
 	
 func _show_hit_effect():
@@ -201,15 +198,16 @@ func _show_hit_effect():
 	
 	
 remotesync func _hit(_dmg : float, _node_name : String, _by : Dictionary):
-	HIT_POINT -= _dmg
-	_hitpoint.value = HIT_POINT
+	data.hitpoint -= _dmg
+	_hitpoint.max_value = data.max_hitpoint
+	_hitpoint.value = data.hitpoint
 	_play_stab_sound()
 	
 	emit_signal("on_attacked", self, _node_name)
 	
 	_show_hit_effect()
 	
-	if HIT_POINT < 0.0:
+	if data.hitpoint < 0.0:
 		rpc("_die", _by)
 		
 	
@@ -256,7 +254,7 @@ func _master_move(_delta):
 			)
 			_tween.start()
 			
-			_velocity = direction * MOVE_SPEED
+			_velocity = direction * data.move_speed
 			
 		else:
 			_state = IDLE
@@ -275,7 +273,7 @@ func _master_move(_delta):
 		_facing_direction = _check_facing_direction(direction)
 		
 		if target.is_alive:
-			if distance_to_target > RANGE_ATTACK:
+			if distance_to_target > data.range_attack:
 				_state = WALKING
 				_animation.play("walking")
 				_tween.interpolate_property(
@@ -285,9 +283,9 @@ func _master_move(_delta):
 				)
 				_tween.start()
 				
-				_velocity = direction * MOVE_SPEED
+				_velocity = direction * data.move_speed
 				
-			elif distance_to_target <= RANGE_ATTACK:
+			elif distance_to_target <= data.range_attack:
 				_tween.interpolate_property(
 					_body ,"scale", _body.scale, 
 					Vector2(_facing_direction, _body.scale.y),
@@ -361,8 +359,8 @@ func _on_spawn_time_timeout():
 	
 	
 remotesync func _spawn():
-	HIT_POINT = 10.0
-	_hitpoint.value = HIT_POINT
+	data.hitpoint = data.max_hitpoint
+	_hitpoint.value = data.hitpoint
 	is_alive = true
 	visible = true
 	_state = IDLE

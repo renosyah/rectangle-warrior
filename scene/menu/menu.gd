@@ -35,6 +35,7 @@ func set_background():
 		
 	
 func _on_find_button_pressed():
+	_dialog_input_name.set_player_name(Global.player.name)
 	_dialog_input_name.visible = true
 	_main_menu.visible = false
 	
@@ -57,7 +58,10 @@ func _on_find_server_on_create():
 	
 func _on_input_name_on_continue(_player_name, html_color):
 	Global.player.name = _player_name
-	Global.player.html_color = html_color
+	Global.player.data = WarriorData.getDefaultData()
+	Global.player.data.owner_id = Global.player.id
+	Global.player.data.name = _player_name
+	Global.player.data.html_color = html_color
 	_dialog_input_name.visible = false
 	
 	_find_server.start_finding()
